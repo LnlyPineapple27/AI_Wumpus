@@ -1,0 +1,5 @@
+4
+-.B.-.GS
+BS.P.BS.W
+W.BS.G.S
+S.G.-.G
