@@ -1,9 +1,14 @@
 import turtle
 from tkinter import messagebox
 import time
+from File_loader import *
+
+# ---------------------------------------------------------------
 val_x = 400
 val_y = 350
 PIXEL_SIZE = 70
+GOLD = 100
+DELAY_TIME = 0.2
 # --------------------------------------------Initial things-----------------------------
 window = turtle.Screen()
 root = turtle.Screen()._root
@@ -12,7 +17,7 @@ window.bgcolor('black')
 window.title('AI WUMPUS')
 window.setup([1000,800], startx=0, starty=20)
 window.tracer(0)
-# --------------------------------------------------
+
 images = ["..\\Images\\70\\DOWN.gif",
           "..\\Images\\70\\LEFT.gif",
           "..\\Images\\70\\RIGHT.gif",
@@ -32,37 +37,47 @@ for img in images:
     turtle.register_shape(img)
 
 
-class Unknown(turtle.Turtle):
-    def __init__(self):
+class Room(turtle.Turtle):
+    def __init__(self, x = 0, y = 0, obj_type = '-', explored = False):
         turtle.Turtle.__init__(self)
         self.shape("..\\Images\\70\\UNKNOWN.gif")
         self.color('blue')
         self.penup()
         self.speed(0)
-
-
-class Empty(turtle.Turtle):
-    def __init__(self):
-        turtle.Turtle.__init__(self)
-        self.shape("..\\Images\\70\\EMPTY.gif")
-        self.color('purple')
-        self.penup()
-        self.speed(0)
-
-
-class Gold(turtle.Turtle):
-    def __init__(self, x, y):
-        turtle.Turtle.__init__(self)
-        self.shape("..\\Images\\70\\GOLD.gif")
-        self.color('gold')
-        self.penup()
-        self.speed(0)
-        self.gold = GOLD
         self.goto(x, y)
+        self.obj_type = obj_type
+        self.explored = explored
 
     def destroy(self):
         self.goto(2000, 2000)
         self.hideturtle()
+
+
+    def Discover(self):
+        if self.explored:
+            return
+        else:
+            if self.obj_type == '-':
+                self.shape("..\\Images\\70\\EMPTY.gif")
+            elif self.obj_type == 'B':
+                self.shape("..\\Images\\70\\BREEZE.gif")
+            elif self.obj_type == 'BS':
+                self.shape("..\\Images\\70\\BREEZE_STENCH.gif")
+            elif self.obj_type == 'BGS':
+                self.shape("..\\Images\\70\\BREEZE_GOLD_STENCH.gif")
+            elif self.obj_type == 'W':
+                self.shape("..\\Images\\70\\WUMPUS.gif")
+            elif self.obj_type == 'S':
+                self.shape("..\\Images\\70\\STENCH.gif")
+            elif self.obj_type == 'GS':
+                self.shape("..\\Images\\70\\GOLD_STENCH.gif")
+            elif self.obj_type == 'BG':
+                self.shape("..\\Images\\70\\BREEZE_GOLD.gif")
+            elif self.obj_type == 'G':
+                self.shape("..\\Images\\70\\GOLD.gif")
+            elif self.obj_type == 'P':
+                self.shape("..\\Images\\70\\PIT.gif")
+
 
 
 class Player(turtle.Turtle):
@@ -78,14 +93,14 @@ class Player(turtle.Turtle):
     def go_up(self):
         print("Player go up")
         move_to_x = self.xcor()
-        move_to_y = self.ycor() + 24
+        move_to_y = self.ycor() + PIXEL_SIZE
         self.shape("..\\Images\\70\\UP.gif")
         self.goto(move_to_x, move_to_y)
 
     def go_down(self):
         print("Player go down")
         move_to_x = self.xcor()
-        move_to_y = self.ycor() - 24
+        move_to_y = self.ycor() - PIXEL_SIZE
         self.shape("..\\Images\\70\\DOWN.gif")
         if (move_to_x, move_to_y) not in walls:
             self.position.x += 1
@@ -93,14 +108,14 @@ class Player(turtle.Turtle):
 
     def go_left(self):
         print("Player go left")
-        move_to_x = self.xcor() - 24
+        move_to_x = self.xcor() - PIXEL_SIZE
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\LEFT.gif")
         self.goto(move_to_x, move_to_y)
 
     def go_right(self):
         print("Player go right")
-        move_to_x = self.xcor() + 24
+        move_to_x = self.xcor() + PIXEL_SIZE
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\RIGHT.gif")
         self.goto(move_to_x, move_to_y)
@@ -138,15 +153,11 @@ class Player(turtle.Turtle):
 
 
 # Global variable
-treats = []
-ghosts = []
-walls = ['']
-walls_block = Wall()
 player = Player()
-
+room_list = []
 
 # start position of character
-def setup_maze(board, difficulty, init_index):
+def setup_map(board, init_index):
     player.position = init_index
     print("[Player's initial position]:",player.position.coordinate())
     # 288
@@ -154,10 +165,12 @@ def setup_maze(board, difficulty, init_index):
     for i in range(len(board)):
         for j in range(len(board[i])):
             # get the character of each x,y coord
-            unity = board[i][j]
-            screen_x = ((-1) * val_x) + (j * 24)
-            screen_y = val_y - (i * 24)
-            # printing the maze
+            item = board[i][j]
+            screen_x = ((-1) * val_x) + (j * PIXEL_SIZE)
+            screen_y = val_y - (i * PIXEL_SIZE)
+            room_list.append(Room(screen_x, screen_y, item))
+            # printing the map
+            """
             if unity == WALL:
                 walls_block.goto(screen_x, screen_y)
                 # walls_block.shape('Wall.gif')
@@ -169,8 +182,9 @@ def setup_maze(board, difficulty, init_index):
             elif unity == MONSTER and difficulty != 1:
                 num = len(ghosts)
                 ghosts.append(Ghost(screen_x, screen_y, num))
+            """
     # print Player according to its given location
-    player.goto(((-1) * val_x) + (player.position.y * 24), val_y - (player.position.x * 24))
+    player.goto(((-1) * val_x) + (player.position.y * PIXEL_SIZE), val_y - (player.position.x * PIXEL_SIZE))
     # :)
     window.update()
 
@@ -196,19 +210,14 @@ def endGame():
 def startGame(data: Map):
     step = 1
     start_time = time.time()
-    setup_maze(data.maze_data, difficulty, data.pacman_init_position)
+    setup_map(data.map_data, difficulty, data.pacman_init_position)
 
-    treats_left = bool(maze.treats)
     died = False
     explored = [player.position.coordinate()]
     path = [player.position.coordinate()]
-    ghost = difficulty > 1
     dead_path = []
 
-    ghost_appearance = []
-    dict_for_ghost_tracing = {}
-
-    while treats_left or not died:
+    while not quit or not died:
         # Time delay
         time.sleep(DELAY_TIME)
         #input("HAHA")
@@ -253,12 +262,9 @@ def startGame(data: Map):
                     # Add the treat gold to the player gold
                     player.gold += treat.gold
                     print('Player Gold: {}'.format(player.gold))
-                    data.maze_data[player.position.x][player.position.y] = 0
+                    data.map_data[player.position.x][player.position.y] = 0
                     data.treats.remove(player.position)
 
-                    #if not maze.treats:
-                    if not data.treats:
-                        treats_left = False
                     # Destroy the treat
                     treat.destroy()
                     # Remove the treat
@@ -295,6 +301,6 @@ if __name__ == "__main__":
     # maze.print_raw_data()
     # maze.print_entities()
     #messagebox.showinfo("UI will started!!","Click ok to start!!!")
-    startGame(mape)
+    startGame(maps)
 
 

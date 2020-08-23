@@ -14,10 +14,10 @@ EMPTY = "-"
 """
 INPUT_DIR = "..\\Input"
 OBJECT_DICT = { "A": "Agent",
-                "-": "Empty", 
+                "-": "Empty",
                 "B": "Breeze",
-                "S": "Stench", 
-                "P": "Pit", 
+                "S": "Stench",
+                "P": "Pit",
                 "W": "Wumpus",
                 "G": "Gold",
                 "BS": "Breeze_Stench",
@@ -41,6 +41,10 @@ class Map:
             for obj in row:
                 print(self.OBJECT_DICT[obj], end="\t")
             print("\n")
+    """
+    def generate_random_spawning_location():
+        # CODE HERE
+    """
 
 
 class Input:
@@ -66,7 +70,7 @@ class Input:
             # get size of map
             size = int(lines.pop(0))
             map_data = list()
-            
+
             for i in range(size):
                 # Input items are separated by '.'
                 row_list = lines[i].rstrip('\n').split(".")
