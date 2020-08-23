@@ -1,12 +1,13 @@
 import turtle
 from tkinter import messagebox
 import time
-# offset stuff
 val_x = 400
 val_y = 350
+PIXEL_SIZE = 70
 # --------------------------------------------Initial things-----------------------------
 window = turtle.Screen()
 root = turtle.Screen()._root
+root.iconbitmap("..\\Images\\icon\\game.ico")
 window.bgcolor('black')
 window.title('AI WUMPUS')
 window.setup([1000,800], startx=0, starty=20)
@@ -16,7 +17,17 @@ images = ["..\\Images\\70\\DOWN.gif",
           "..\\Images\\70\\LEFT.gif",
           "..\\Images\\70\\RIGHT.gif",
           "..\\Images\\70\\UP.gif",
-          "..\\Images\\70\\WUMPUS.gif"]
+          "..\\Images\\70\\WUMPUS.gif",
+          "..\\Images\\70\\BREEZE.gif",
+          "..\\Images\\70\\BREEZE_GOLD.gif",
+          "..\\Images\\70\\BREEZE_STENCH.gif",
+          "..\\Images\\70\\BREEZE_GOLD_STENCH.gif",
+          "..\\Images\\70\\GOLD.gif",
+          "..\\Images\\70\\GOLD_STENCH.gif",
+          "..\\Images\\70\\PIT.gif",
+          "..\\Images\\70\\EMPTY.gif",
+          "..\\Images\\70\\STENCH.gif",
+          "..\\Images\\70\\UNKNOWN.gif"]
 for img in images:
     turtle.register_shape(img)
 
@@ -24,64 +35,75 @@ for img in images:
 class Unknown(turtle.Turtle):
     def __init__(self):
         turtle.Turtle.__init__(self)
-        self.shape('square')
+        self.shape("..\\Images\\70\\UNKNOWN.gif")
         self.color('blue')
         self.penup()
         self.speed(0)
 
-class Known(turtle.Turtle):
+
+class Empty(turtle.Turtle):
     def __init__(self):
         turtle.Turtle.__init__(self)
-        self.shape('square')
+        self.shape("..\\Images\\70\\EMPTY.gif")
         self.color('purple')
         self.penup()
         self.speed(0)
+
+
+class Gold(turtle.Turtle):
+    def __init__(self, x, y):
+        turtle.Turtle.__init__(self)
+        self.shape("..\\Images\\70\\GOLD.gif")
+        self.color('gold')
+        self.penup()
+        self.speed(0)
+        self.gold = GOLD
+        self.goto(x, y)
+
+    def destroy(self):
+        self.goto(2000, 2000)
+        self.hideturtle()
+
 
 class Player(turtle.Turtle):
     def __init__(self, init_pos: Point = None):
         turtle.Turtle.__init__(self)
         self.position = init_pos if init_pos else Point()
-        self.shape("..\\images\\gif\\pacman_right.gif")
-        self.color('gold')
+        self.shape("..\\Images\\70\\RIGHT.gif")
+        self.color('green')
         self.penup()
         self.speed(0)
         self.gold = 0
 
     def go_up(self):
-        print("Pacman go up")
+        print("Player go up")
         move_to_x = self.xcor()
         move_to_y = self.ycor() + 24
-        self.shape("..\\images\\gif\\pacman_up.gif")
-        if (move_to_x, move_to_y) not in walls:
-            self.position.x -= 1
-            self.goto(move_to_x, move_to_y)
+        self.shape("..\\Images\\70\\UP.gif")
+        self.goto(move_to_x, move_to_y)
 
     def go_down(self):
-        print("Pacman go down")
+        print("Player go down")
         move_to_x = self.xcor()
         move_to_y = self.ycor() - 24
-        self.shape("..\\images\\gif\\pacman_down.gif")
+        self.shape("..\\Images\\70\\DOWN.gif")
         if (move_to_x, move_to_y) not in walls:
             self.position.x += 1
             self.goto(move_to_x, move_to_y)
 
     def go_left(self):
-        print("Pacman go left")
+        print("Player go left")
         move_to_x = self.xcor() - 24
         move_to_y = self.ycor()
-        self.shape("..\\images\\gif\\pacman_left.gif")
-        if (move_to_x, move_to_y) not in walls:
-            self.position.y -= 1
-            self.goto(move_to_x, move_to_y)
+        self.shape("..\\Images\\70\\LEFT.gif")
+        self.goto(move_to_x, move_to_y)
 
     def go_right(self):
-        print("Pacman go right")
+        print("Player go right")
         move_to_x = self.xcor() + 24
         move_to_y = self.ycor()
-        self.shape("..\\images\\gif\\pacman_right.gif")
-        if (move_to_x, move_to_y) not in walls:
-            self.position.y += 1
-            self.goto(move_to_x, move_to_y)
+        self.shape("..\\Images\\70\\RIGHT.gif")
+        self.goto(move_to_x, move_to_y)
 
     def move(self, next_move: str = None):
         if next_move == "Up":
@@ -112,158 +134,7 @@ class Player(turtle.Turtle):
         self.hideturtle()
 
 
-class Ghost(turtle.Turtle):
-    def __init__(self, x, y, num):
-        turtle.Turtle.__init__(self)
-        self.num = num
 
-        if self.num == 0:
-            self.shape("..\\images\\gif\\Blue_left.gif")
-        elif self.num == 1:
-            self.shape("..\\images\\gif\\Orange_left.gif")
-        elif self.num == 2:
-            self.shape("..\\images\\gif\\Pink_left.gif")
-        elif self.num == 3:
-            self.shape("..\\images\\gif\\Red_left.gif")
-        else:
-            self.shape("..\\images\\gif\\White_left.gif")
-
-        self.color("green")
-        self.penup()
-        self.speed(0)
-        # self.gold = 25
-        self.goto(x, y)
-        # self.direction = random.choice(["up", "down", "right", "left"])
-        self.direction_to_init = None
-        self.rotate = 0
-        self.previous_move = None
-    def coord(self):
-        return (self.xcor(), self.ycor())
-
-    def destroy(self):
-        self.goto(2000, 2000)
-        self.hideturtle()
-
-    def go_forward(self, direction):
-        move_to_x = self.xcor()
-        move_to_y = self.ycor()
-        if direction == "Up":
-            move_to_y += 24
-        elif direction == "Down":
-            move_to_y -= 24
-        elif direction == "Right":
-            move_to_x += 24
-            if self.num == 0:
-                self.shape("..\\images\\gif\\Blue_right.gif")
-            elif self.num == 1:
-                self.shape("..\\images\\gif\\Orange_right.gif")
-            elif self.num == 2:
-                self.shape("..\\images\\gif\\Pink_right.gif")
-            elif self.num == 3:
-                self.shape("..\\images\\gif\\Red_right.gif")
-            else:
-                self.shape("..\\images\\gif\\White_right.gif")
-        elif direction == "Left":
-            move_to_x -= 24
-            if self.num == 0:
-                self.shape("..\\images\\gif\\Blue_left.gif")
-            elif self.num == 1:
-                self.shape("..\\images\\gif\\Orange_left.gif")
-            elif self.num == 2:
-                self.shape("..\\images\\gif\\Pink_left.gif")
-            elif self.num == 3:
-                self.shape("..\\images\\gif\\Red_left.gif")
-            else:
-                self.shape("..\\images\\gif\\White_left.gif")
-        if (move_to_x, move_to_y) not in walls:
-            self.goto(move_to_x, move_to_y)
-            self.forward(0)
-            return True
-        return False
-
-    def go_backward(self, direction):
-        move_to_x = self.xcor()
-        move_to_y = self.ycor()
-        if direction == "Down":
-            move_to_y += 24
-        elif direction == "Up":
-            move_to_y -= 24
-        elif direction == "Left":
-            move_to_x += 24
-            if self.num == 0:
-                self.shape("..\\images\\gif\\Blue_right.gif")
-            elif self.num == 1:
-                self.shape("..\\images\\gif\\Orange_right.gif")
-            elif self.num == 2:
-                self.shape("..\\images\\gif\\Pink_right.gif")
-            elif self.num == 3:
-                self.shape("..\\images\\gif\\Red_right.gif")
-            else:
-                self.shape("..\\images\\gif\\White_right.gif")
-        elif direction == "Right":
-            move_to_x -= 24
-            if self.num == 0:
-                self.shape("..\\images\\gif\\Blue_left.gif")
-            elif self.num == 1:
-                self.shape("..\\images\\gif\\Orange_left.gif")
-            elif self.num == 2:
-                self.shape("..\\images\\gif\\Pink_left.gif")
-            elif self.num == 3:
-                self.shape("..\\images\\gif\\Red_left.gif")
-            else:
-                self.shape("..\\images\\gif\\White_left.gif")
-
-        if (move_to_x, move_to_y) not in walls:
-            self.goto(move_to_x, move_to_y)
-            self.forward(0)
-            return True
-        return False
-
-    def move(self):
-        if self.direction_to_init == None:
-            # clock-wise move-ment
-            directions_list = ["Up", "Right", "Down", "Left"]
-            count = 0
-            i = self.rotate
-            if i == 3:
-                i = 0
-            elif i >= 0 and i < 3:
-                i += 1
-            while count < 4:
-                count += 1
-                try_val = self.go_forward(directions_list[i])
-                if try_val:
-                    self.direction_to_init = directions_list[i]
-                    break
-                else:
-                    if i == 3:
-                        i = 0
-                    elif i >= 0 and i < 3:
-                        i += 1
-            self.forward(0)
-            self.rotate = i
-        else:
-            try_val = self.go_backward(self.direction_to_init)
-            self.forward(0)
-            if not try_val:
-                print("[Error]: Something went wrong in ghost's movement to get back to initial place")
-            self.direction_to_init = None
-
-
-
-class Treasure(turtle.Turtle):
-    def __init__(self, x, y):
-        turtle.Turtle.__init__(self)
-        self.shape("..\\images\\gif\\fruit.gif")
-        self.color('black')
-        self.penup()
-        self.speed(0)
-        self.gold = GOLD
-        self.goto(x, y)
-
-    def destroy(self):
-        self.goto(2000, 2000)
-        self.hideturtle()
 
 
 # Global variable
@@ -322,7 +193,7 @@ def endGame():
     sys.exit()
 
 
-def startGame(data: Maze, difficulty):
+def startGame(data: Map):
     step = 1
     start_time = time.time()
     setup_maze(data.maze_data, difficulty, data.pacman_init_position)
@@ -355,26 +226,14 @@ def startGame(data: Maze, difficulty):
         if not died:
             print("current position:", player.position.coordinate())
             # Think next move base on dificulty
-            if difficulty < 3:
-                # next_move = Level1.level1(maze, player.position, path, dead_path, ghost)
-                next_move = Level1.level1(data, player.position, path, dead_path, ghost)
-                # Move
-                #print("Dead path: ", dead_path)
-                #print("Explored: ", explored)
 
-            elif difficulty == 3:
-                next_move = Level3.level3(data, player.position, path, dead_path, ghost_appearance)
-                # in case pac man get stuck between a corner and a ghost
-                if next_move == "Stuck" and ghost_appearance:
-                    ghost_appearance.pop()
-                print("--------------ghosts location:\n", [i.coordinate() for i in ghost_appearance])
-            elif difficulty == 4:
-                location = player.position.coordinate()
-                # leave trail for ghosts to follow
-                dict_for_ghost_tracing[location] = step
-                next_move = Level4.level4(data, player.position, path, dead_path)
-            else:
-                next_move = "Nah???"
+
+            location = player.position.coordinate()
+            # leave trail for ghosts to follow
+            dict_for_ghost_tracing[location] = step
+            next_move = Level4.level4(data, player.position, path, dead_path)
+
+
 
             print("------------------------end")
             cur_pos = player.position.coordinate()
@@ -411,37 +270,7 @@ def startGame(data: Maze, difficulty):
                     print("Player died!!")
                     player.destroy()
                     died = True
-                if difficulty > 2:
-                    """
-                    # How turtle tiles's location was set from maze coordinate
-                    screen_x = ((-1) * val_x) + (j * 24)
-                    screen_y = val_y - (i * 24)
-                    """
-                    previous_pos = ghost.coord()
-                    pos_x = int((val_y - previous_pos[1]) / 24)
-                    pos_y = int((previous_pos[0] + val_x) / 24)
-                    data.maze_data[pos_x][pos_y] = 0
-                    #print("Ghost move from:", pos_x, pos_y)
-                    if difficulty == 3:
-                        ghost.move()
-                    elif difficulty == 4:
-                        ghost_point = Point(pos_x, pos_y)
-                        g_move = Level4.ghost_move(data, ghost_point, dict_for_ghost_tracing, player.position, step, ghost.previous_move)
-                        ghost.previous_move = g_move
-                        if g_move == "Stuck":
-                            ghost.move()
-                            ghost.forward(0)
-                        else:
-                            valid_move = ghost.go_forward(g_move)
-                            ghost.forward(0)
-                            if not valid_move:
-                                print("---------------------Ghost hit walls - WTF! this is not suppose to happen")
-                    new_pos = ghost.coord()
-                    #print("here")
-                    pos_x = int((val_y - new_pos[1]) / 24)
-                    pos_y = int((new_pos[0] + val_x) / 24)
-                    data.maze_data[pos_x][pos_y] = 3
-                    #print("to:", pos_x, pos_y)
+
 
         # Update screen
 
@@ -461,12 +290,11 @@ def startGame(data: Maze, difficulty):
 if __name__ == "__main__":
     input_list = InputHandle()
     input_list.items()
-    maze = input_list.get_maze("Maze2.txt")
+    map = input_list.get_map("Maze2.txt")
     #maze = input_list.get_maze("Stuckin.txt")`
     # maze.print_raw_data()
     # maze.print_entities()
-    difficulty = 4
     #messagebox.showinfo("UI will started!!","Click ok to start!!!")
-    startGame(maze, difficulty)
+    startGame(mape)
 
 
