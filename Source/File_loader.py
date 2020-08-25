@@ -1,5 +1,8 @@
 import os
 import random
+
+from typing import List
+
 from Point import Point
 
 # import glob
@@ -25,10 +28,12 @@ OBJECT_DICT = {"A": "Agent",
                "GS": "Gold_Stench",
                "BG": "Breeze_Gold",
                "BGS": "Breeze_Gold_Stench"}
-DEFAULT_NUM = {"W":1,
-               "P":3,
-               "G":1,
-               "Size":5}
+DEFAULT_NUM = {"W": 10,
+               "P": 10,
+               "G": 10,
+               "Size": 8}
+SYM = ["A", "W", "P"]
+SIG = ["B", "S", "G", "-"]
 
 
 class Map:
@@ -107,68 +112,115 @@ class Input:
         return Map(size, map_data)
 
 
-def generate_map(input_dir=INPUT_DIR, size:int=DEFAULT_NUM["Size"], now:int=DEFAULT_NUM["W"], nop:int=DEFAULT_NUM["P"], nog:int=DEFAULT_NUM["G"]):
-    file_name = input_dir + '\\' + str(size) + "x"+ str(size) + "_" + str(now) + "W" + "_" + str(nop) + "P" + ".txt"
-    str_map = [["-" for _ in range(size)] for _ in range(size)]  # generate empty size x size map
-    wl = []
-    for _ in range(now):
-        x = random.randint(0, size - 1)
-        y = random.randint(0, size - 1)
-        while (x, y) in wl:
-            x = random.randint(0, size - 1)
-            y = random.randint(0, size - 1)
-        wl.append((x, y))
-    pl = []
+def generate_point(nop: int = 1, sos: int = 1, invl: list = None) -> list:
+    """
+    Generate points\n
+    :param nop: Number of points
+    :param sos: Size of space
+    :param invl: Invalid list (Don't generate to here)
+    :return:  List of point
+    """
+    if not invl:
+        invl = []
+    pl = []  # Init points list
     for _ in range(nop):
-        x = random.randint(0, size - 1)
-        y = random.randint(0, size - 1)
-        while (x, y) in pl or (x, y) in wl:
-            x = random.randint(0, size - 1)
-            y = random.randint(0, size - 1)
-        pl.append((x, y))
-    gl = []
-    for _ in range(nog):
-        x = random.randint(0, size - 1)
-        y = random.randint(0, size - 1)
-        while (x, y) in pl + wl + gl:
-            x = random.randint(0, size - 1)
-            y = random.randint(0, size - 1)
-        gl.append((x, y))
+        p = Point()
+        p.rand(sos)
+        while p in pl or p in invl:
+            p.rand(sos)
+        pl.append(p)
+    return pl
 
-    for p in pl:
-        blk_rng = range(-1, 2)
-        for dx in blk_rng:
-            for dy in blk_rng:
-                if p[0] + dx not in range(size) or p[1] + dy not in range(size):
-                    continue
-                str_map[p[0] + dx][p[1] + dy] = "B" if str_map[p[0] + dx][p[1] + dy] in ("-", "B") else str_map[p[0] + dx][p[1] + dy] + "B"
-        str_map[p[0]][p[1]] = "P"
 
-    for g in gl:
-        str_map[g[0]][g[1]] = "G" if str_map[g[0]][g[1]] in ("-", "G") else str_map[g[0]][g[1]] + "G"
+def add_entity(mat, sym, sign, lop):
+    """
+    Add entities with symbol and sign\n
+    :param mat: Matrix
+    :param sym: Symbol of entity
+    :param sign: Sign of entity
+    :param lop: List entity's points
+    :return: Matrix with entities added
+    """
+    is_empty = lambda p: mat[p.x][p.y] == "-"
+    is_in_map = lambda p: 0 <= p.x < len(mat) and 0 <= p.y < len(mat)
+    is_entity = lambda p: mat[p.x][p.y] in SYM
+    for pnt in lop:
+        if sign:
+            u, d, l, r = pnt.up(), pnt.down(), pnt.left(), pnt.right()
+            if is_in_map(u) and not is_entity(u):
+                u = u
+                if is_empty(u):
+                    mat[u.x][u.y] = sign
+                else:
+                    mat[u.x][u.y] += sign if sign not in mat[u.x][u.y] else ""
+            if is_in_map(d) and not is_entity(d):
+                d = d
+                if is_empty(d):
+                    mat[d.x][d.y] = sign
+                else:
+                    mat[d.x][d.y] += sign if sign not in mat[d.x][d.y] else ""
+            if is_in_map(l) and not is_entity(l):
+                if is_empty(l):
+                    mat[l.x][l.y] = sign
+                else:
+                    mat[l.x][l.y] += sign if sign not in mat[l.x][l.y] else ""
+            if is_in_map(r) and not is_entity(r):
+                if is_empty(r):
+                    mat[r.x][r.y] = sign
+                else:
+                    mat[r.x][r.y] += sign if sign not in mat[r.x][r.y] else ""
+        if sym == "G":
+            mat[pnt.x][pnt.y] = sym if is_empty(pnt) else mat[pnt.x][pnt.y] + sym
+        else:
+            mat[pnt.x][pnt.y] = sym
+    return mat
 
-    for w in wl:
-        blk_rng = range(-1, 2)
-        for dx in blk_rng:
-            for dy in blk_rng:
-                if w[0] + dx not in range(size) or w[1] + dy not in range(size):
-                    continue
-                str_map[w[0] + dx][w[1] + dy] = "S" if str_map[w[0] + dx][w[1] + dy] in ("-","S") else str_map[w[0] + dx][w[1] + dy] + "S"
-        str_map[w[0]][w[1]] = "W"
 
+def create_entities_matrix(size=DEFAULT_NUM["Size"], now=DEFAULT_NUM["W"], nop=DEFAULT_NUM["P"], nog=DEFAULT_NUM["G"]):
+    """
+    Create entities matrix\n
+    :param size: Size of map
+    :param now: Number of wumpuses
+    :param nop: Number of pits
+    :param nog: Number of golds
+    :return: None
+    """
+    mat = [["-" for _ in range(size)] for _ in range(size)]  # generate empty size x size map
+    wl = generate_point(now, size - 1, None)
+    pl = generate_point(nop, size - 1, wl)
+    gl = generate_point(nog, size - 1, wl + pl)
+    mat = add_entity(mat, "P", "B", pl)
+    mat = add_entity(mat, "G", None, gl)
+    mat = add_entity(mat, "W", "S", wl)
+    return mat
+
+
+def generate_map(input_dir=INPUT_DIR, size=DEFAULT_NUM["Size"], now=DEFAULT_NUM["W"], nop=DEFAULT_NUM["P"],
+                 nog=DEFAULT_NUM["G"]) -> None:
+    """
+    Generate a wumpus map to <size>_<Number of gold>_<Number of wumpus>_<Number of pit>.txt file\n
+    :param input_dir: Input directory
+    :param size: Size of map
+    :param now: Number of wumpuses
+    :param nop: Number of pits
+    :param nog: Number of golds
+    :return: None
+    """
+    file_name = input_dir + '\\' + str(size) + "x" + str(size) + "_"
+    file_name += str(nog) + "G_" + str(now) + "W_" + str(nop) + "P.txt"
+    matrix = create_entities_matrix(size, now, nop, nog)
     with open(file_name, "w") as fout:
         fout.write(str(size) + "\n")
         for i in range(size):
             for j in range(size):
-                end = " " if j + 1 < size else "\n"
-                fout.write(str_map[i][j] + end)
-
+                end = "." if j + 1 < size else "\n"
+                fout.write(matrix[i][j] + end)
 
 
 if __name__ == "__main__":
     generate_map()
-    """input_list = Input()
+    input_list = Input()
     input_list.items()
-    map = input_list.get_map("input.txt")
+    map = input_list.get_map("8x8_10G_10W_10P.txt")
     map.print_entities()
-    print(map.random_spawning_location())"""
+    print(map.random_spawning_location())

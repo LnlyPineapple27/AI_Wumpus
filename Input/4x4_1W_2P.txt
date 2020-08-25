@@ -1,5 +1,0 @@
-4
-- S W S
-- S BS BS
-- B BG PB
-- B P B
