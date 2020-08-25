@@ -1,5 +1,6 @@
 import math
 import copy as cp
+from random import randint
 
 
 class Point:
@@ -10,11 +11,15 @@ class Point:
     def __eq__(self, another):
         return self.x == another.x and self.y == another.y
 
+    def rand(self, sos):
+        self.x = randint(0, sos)
+        self.y = randint(0, sos)
+
     def manhattan_distance(self, another):
         return abs(self.x - another.x) + abs(self.y - another.y)
 
     def euclid_distance(self, another):
-        return math.sqrt((self.x - another.x)**2 + (self.y - another.y)**2)
+        return math.sqrt((self.x - another.x) ** 2 + (self.y - another.y) ** 2)
 
     def coordinate(self):
         return cp.copy(self.x), cp.copy(self.y)
@@ -23,7 +28,7 @@ class Point:
         cp_pnt = cp.deepcopy(self)
         cp_pnt.x -= 1
         return cp_pnt
-    
+
     def down(self):
         cp_pnt = cp.deepcopy(self)
         cp_pnt.x += 1
