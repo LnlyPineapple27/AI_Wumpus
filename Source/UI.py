@@ -2,20 +2,20 @@ import turtle
 from tkinter import messagebox
 import time
 from File_loader import *
-
 # ---------------------------------------------------------------
 val_x = 400
-val_y = 350
+val_y = 50
 PIXEL_SIZE = 70
 GOLD = 100
 DELAY_TIME = 0.2
+DEATH_COST = 10000
 # --------------------------------------------Initial things-----------------------------
 window = turtle.Screen()
 root = turtle.Screen()._root
 root.iconbitmap("..\\Images\\icon\\game.ico")
-window.bgcolor('black')
+window.bgcolor('purple')
 window.title('AI WUMPUS')
-window.setup([1000,800], startx=0, starty=20)
+window.setup(1000,800, startx=0, starty=20)
 window.tracer(0)
 
 images = ["..\\Images\\70\\DOWN.gif",
@@ -78,7 +78,12 @@ class Room(turtle.Turtle):
             elif self.obj_type == 'P':
                 self.shape("..\\Images\\70\\PIT.gif")
 
+class Pit(Room):
+    pass
 
+
+class Wumpus(Room):
+    pass
 
 class Player(turtle.Turtle):
     def __init__(self, init_pos: Point = None):
@@ -96,15 +101,17 @@ class Player(turtle.Turtle):
         move_to_y = self.ycor() + PIXEL_SIZE
         self.shape("..\\Images\\70\\UP.gif")
         self.goto(move_to_x, move_to_y)
+        self.forward(0)
+        self.position.x -= 1
 
     def go_down(self):
         print("Player go down")
         move_to_x = self.xcor()
         move_to_y = self.ycor() - PIXEL_SIZE
         self.shape("..\\Images\\70\\DOWN.gif")
-        if (move_to_x, move_to_y) not in walls:
-            self.position.x += 1
-            self.goto(move_to_x, move_to_y)
+        self.goto(move_to_x, move_to_y)
+        self.forward(0)
+        self.position.x += 1
 
     def go_left(self):
         print("Player go left")
@@ -112,6 +119,8 @@ class Player(turtle.Turtle):
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\LEFT.gif")
         self.goto(move_to_x, move_to_y)
+        self.forward(0)
+        self.position.y -= 1
 
     def go_right(self):
         print("Player go right")
@@ -119,6 +128,8 @@ class Player(turtle.Turtle):
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\RIGHT.gif")
         self.goto(move_to_x, move_to_y)
+        self.forward(0)
+        self.position.y += 1
 
     def move(self, next_move: str = None):
         if next_move == "Up":
@@ -135,6 +146,18 @@ class Player(turtle.Turtle):
     def exit(self):
         self.goto(self.xcor(), self.ycor())
 
+    def destroy(self):
+        self.goto(2000, 2000)
+        self.hideturtle()
+
+    def checkstatus(self, other: Room):
+        if other.obj_type != 'W' and other.obj_type != 'P':
+            return False
+        else:
+            return (self.xcor() == other.xcor()) and (self.ycor() == other.ycor())
+
+
+"""
     def is_collision(self, other):
         a = self.xcor() - other.xcor()
         b = self.ycor() - other.ycor()
@@ -143,10 +166,7 @@ class Player(turtle.Turtle):
             return True
         else:
             return False
-
-    def destroy(self):
-        self.goto(2000, 2000)
-        self.hideturtle()
+"""
 
 
 
@@ -154,7 +174,9 @@ class Player(turtle.Turtle):
 
 # Global variable
 player = Player()
-room_list = []
+room_map = []
+pit_location_list = []
+wumpus_location_list = []
 
 # start position of character
 def setup_map(board, init_index):
@@ -163,129 +185,66 @@ def setup_map(board, init_index):
     # 288
 
     for i in range(len(board)):
+        row_map = []
         for j in range(len(board[i])):
             # get the character of each x,y coord
             item = board[i][j]
             screen_x = ((-1) * val_x) + (j * PIXEL_SIZE)
             screen_y = val_y - (i * PIXEL_SIZE)
-            room_list.append(Room(screen_x, screen_y, item))
-            # printing the map
-            """
-            if unity == WALL:
-                walls_block.goto(screen_x, screen_y)
-                # walls_block.shape('Wall.gif')
-                walls_block.stamp()
-                # Add co-ordinates to list
-                walls.append((screen_x, screen_y))
-            elif unity == TREAT:
-                treats.append(Treasure(screen_x, screen_y))
-            elif unity == MONSTER and difficulty != 1:
-                num = len(ghosts)
-                ghosts.append(Ghost(screen_x, screen_y, num))
-            """
+
+            row_map.append(Room(screen_x, screen_y, item))
+            if item == "P":
+                pit_location_list.append(Point(i,j))
+            elif item == "W":
+                wumpus_location_list.append(Point(i,j))
+
+
+        room_map.append(row_map)
     # print Player according to its given location
+    room_map[player.position.x][player.position.y].Discover()
     player.goto(((-1) * val_x) + (player.position.y * PIXEL_SIZE), val_y - (player.position.x * PIXEL_SIZE))
-    # :)
+    player.forward(0)
+
     window.update()
-
-
-def score_evaluation(gold, died, total_time):
-    dc = DEATH_COST if died else 0
-    return gold - dc - total_time * TCPS
-
-
-def show_score(step, died, treats_left):
-    score = score_evaluation(player.gold, died, step)
-    mesg = "You WON" if not treats_left else "You DIED"
-    mesg += ", Score = {}, took {} step".format(score, step)
-    print("[RESULT]:" + mesg)
-    messagebox.showinfo("Congratulations!!!!", mesg)
-
 
 def endGame():
     print("[Game closed]")
     sys.exit()
 
 
-def startGame(data: Map):
+def startGame(data: Map, init_pos):
     step = 1
-    start_time = time.time()
-    setup_map(data.map_data, difficulty, data.pacman_init_position)
-
+    setup_map(data.map_data, init_pos)
+    turtle.listen()
+    turtle.onkey(player.go_up, 'Up')
+    turtle.onkey(player.go_down, 'Down')
+    turtle.onkey(player.go_right, 'Right')
+    turtle.onkey(player.go_left, 'Left')
     died = False
-    explored = [player.position.coordinate()]
-    path = [player.position.coordinate()]
-    dead_path = []
-
-    while not quit or not died:
+    quit = False
+    while not quit and not died:
         # Time delay
         time.sleep(DELAY_TIME)
-        #input("HAHA")
         # Check collision
-        for ghost in ghosts:
-            if player.is_collision(ghost):
-                player.gold -= DEATH_COST
-                print("Player died!!")
-                player.destroy()
-                died = True
+        room_map[player.position.x][player.position.y].Discover()
+        room_map[player.position.x][player.position.y].hideturtle()
+        """
+        dir = ["Up", "Down", "LEFT", "Right"]
+        while dir:
+            player_dir = random.choice(dir)
+            dir.remove(player_dir)
+            if data.is_valid_move(player.position, player_dir):
+                player.move(player_dir)
+                break
+        """
+# chỉnh đồng nhất
+# nếu ăn vàng thì mất vàng
+# va chạm = cách so sánh pos trong pLayer và pos room, xet loại room rồi đánh giá died hay thêm vàng
 
-        # Check alive
-        print("------------------------Step level: ", step)
-        print("Position:", player.position.coordinate())
-        if not died:
-            print("current position:", player.position.coordinate())
-            # Think next move base on dificulty
-
-
-            location = player.position.coordinate()
-            # leave trail for ghosts to follow
-            dict_for_ghost_tracing[location] = step
-            next_move = Level4.level4(data, player.position, path, dead_path)
-
-
-
-            print("------------------------end")
-            cur_pos = player.position.coordinate()
-            if next_move == "Stuck":
-                print("Stuck")
-                dead_path.append(cur_pos)
-                # remove current and node before to go back
-                path.clear()
-                # del path[-2:-1]
-            else:
-                player.move(next_move)
-                path.append(player.position.coordinate())
-                explored.append(player.position.coordinate())
-
-            for treat in treats:
-                if player.is_collision(treat):
-                    # Add the treat gold to the player gold
-                    player.gold += treat.gold
-                    print('Player Gold: {}'.format(player.gold))
-                    data.map_data[player.position.x][player.position.y] = 0
-                    data.treats.remove(player.position)
-
-                    # Destroy the treat
-                    treat.destroy()
-                    # Remove the treat
-                    treats.remove(treat)
-            # double check
-            for ghost in ghosts:
-                if player.is_collision(ghost):
-                    player.gold -= 1000
-                    print("Player died!!")
-                    player.destroy()
-                    died = True
-
-
-        # Update screen
 
         window.update()
-        if not treats_left or died:
+        if died:
             print("END game")
-            end_time = time.time()
-            total_time = int(end_time - start_time)
-            show_score(step, died, treats_left)
             endGame()
         step += 1
 
@@ -294,13 +253,14 @@ def startGame(data: Map):
 
 
 if __name__ == "__main__":
-    input_list = InputHandle()
+    input_list = Input()
     input_list.items()
-    map = input_list.get_map("Maze2.txt")
-    #maze = input_list.get_maze("Stuckin.txt")`
-    # maze.print_raw_data()
-    # maze.print_entities()
+    map = input_list.get_map("input.txt")
+    # map.print_entities()
+    init_pos = map.random_spawning_location()
     #messagebox.showinfo("UI will started!!","Click ok to start!!!")
-    startGame(maps)
+    startGame(map, init_pos)
+
+
 
 
