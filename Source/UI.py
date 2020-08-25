@@ -2,20 +2,24 @@ import turtle
 from tkinter import messagebox
 import time
 from File_loader import *
+import sys
 # ---------------------------------------------------------------
-val_x = 400
-val_y = 50
+val_x = 300
+val_y = 250
 PIXEL_SIZE = 70
 GOLD = 100
-DELAY_TIME = 0.2
+DELAY_TIME = 1
 DEATH_COST = 10000
+width = 1000
+height =800
+style = ('Courier', 20, 'italic')
 # --------------------------------------------Initial things-----------------------------
 window = turtle.Screen()
 root = turtle.Screen()._root
 root.iconbitmap("..\\Images\\icon\\game.ico")
-window.bgcolor('purple')
+window.bgcolor('black')
 window.title('AI WUMPUS')
-window.setup(1000,800, startx=0, starty=20)
+window.setup(width,height, startx=0, starty=20)
 window.tracer(0)
 
 images = ["..\\Images\\70\\DOWN.gif",
@@ -35,6 +39,22 @@ images = ["..\\Images\\70\\DOWN.gif",
           "..\\Images\\70\\UNKNOWN.gif"]
 for img in images:
     turtle.register_shape(img)
+
+class ScreenMessage(turtle.Turtle):
+    def __init__(self):
+        turtle.Turtle.__init__(self)
+        #self.shape("Circle")
+        #self.message = message
+        self.color('blue')
+        self.penup()
+        self.speed(0)
+        self.goto((-1)*width/3, height/3  + 50)
+        #self.write(self.message, font=style, align='left')
+        self.hideturtle()
+    def writeMessage(self, message = ""):
+        self.clear()
+        self.write(message, font=style, align='left')
+        self.hideturtle()
 
 
 class Room(turtle.Turtle):
@@ -78,12 +98,6 @@ class Room(turtle.Turtle):
             elif self.obj_type == 'P':
                 self.shape("..\\Images\\70\\PIT.gif")
 
-class Pit(Room):
-    pass
-
-
-class Wumpus(Room):
-    pass
 
 class Player(turtle.Turtle):
     def __init__(self, init_pos: Point = None):
@@ -174,6 +188,7 @@ class Player(turtle.Turtle):
 
 # Global variable
 player = Player()
+mes = ScreenMessage()
 room_map = []
 pit_location_list = []
 wumpus_location_list = []
@@ -202,8 +217,8 @@ def setup_map(board, init_index):
         room_map.append(row_map)
     # print Player according to its given location
     room_map[player.position.x][player.position.y].Discover()
+    room_map[player.position.x][player.position.y].hideturtle()
     player.goto(((-1) * val_x) + (player.position.y * PIXEL_SIZE), val_y - (player.position.x * PIXEL_SIZE))
-    player.forward(0)
 
     window.update()
 
@@ -215,20 +230,27 @@ def endGame():
 def startGame(data: Map, init_pos):
     step = 1
     setup_map(data.map_data, init_pos)
+    """
     turtle.listen()
     turtle.onkey(player.go_up, 'Up')
     turtle.onkey(player.go_down, 'Down')
     turtle.onkey(player.go_right, 'Right')
     turtle.onkey(player.go_left, 'Left')
+    """
     died = False
     quit = False
-    while not quit and not died:
+
+    room_item = data.OBJECT_DICT[data.map_data[player.position.x][player.position.y]]
+    message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(player.position.y) + ") - Found " + room_item
+    mes.writeMessage(message)
+    while not died and not quit:
+
         # Time delay
         time.sleep(DELAY_TIME)
-        # Check collision
-        room_map[player.position.x][player.position.y].Discover()
-        room_map[player.position.x][player.position.y].hideturtle()
-        """
+
+        # Check valid move
+        room_map[player.position.x][player.position.y].showturtle()
+
         dir = ["Up", "Down", "LEFT", "Right"]
         while dir:
             player_dir = random.choice(dir)
@@ -236,18 +258,34 @@ def startGame(data: Map, init_pos):
             if data.is_valid_move(player.position, player_dir):
                 player.move(player_dir)
                 break
-        """
+
+        room_map[player.position.x][player.position.y].Discover()
+        room_map[player.position.x][player.position.y].hideturtle()
+
+        room_item = data.OBJECT_DICT[data.map_data[player.position.x][player.position.y]]
+        message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(player.position.y) + ") - Found " + room_item
+        mes.writeMessage(message)
+                # check player is dead or not
+        for pit in pit_location_list:
+            if pit == player.position:
+                print("Player fell into a pit!!")
+                died = True
+                break
+
+        for wumpus in wumpus_location_list:
+            if wumpus == player.position:
+                print("Player got eaten by the wumpus!!")
+                died = True
+                break
 # chỉnh đồng nhất
 # nếu ăn vàng thì mất vàng
 # va chạm = cách so sánh pos trong pLayer và pos room, xet loại room rồi đánh giá died hay thêm vàng
 
 
         window.update()
-        if died:
-            print("END game")
-            endGame()
-        step += 1
 
+        step += 1
+    print("END game:")
     # turtle.exitonclick()
     endGame()
 
