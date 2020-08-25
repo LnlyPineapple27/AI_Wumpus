@@ -45,7 +45,7 @@ class ScreenMessage(turtle.Turtle):
         turtle.Turtle.__init__(self)
         #self.shape("Circle")
         #self.message = message
-        self.color('blue')
+        self.color('yellow')
         self.penup()
         self.speed(0)
         self.goto((-1)*width/3, height/3  + 50)
@@ -84,17 +84,21 @@ class Room(turtle.Turtle):
             elif self.obj_type == 'BS':
                 self.shape("..\\Images\\70\\BREEZE_STENCH.gif")
             elif self.obj_type == 'BGS':
-                self.shape("..\\Images\\70\\BREEZE_GOLD_STENCH.gif")
+                self.shape("..\\Images\\70\\BREEZE_STENCH.gif")
+                #self.shape("..\\Images\\70\\BREEZE_GOLD_STENCH.gif")
             elif self.obj_type == 'W':
                 self.shape("..\\Images\\70\\WUMPUS.gif")
             elif self.obj_type == 'S':
                 self.shape("..\\Images\\70\\STENCH.gif")
             elif self.obj_type == 'GS':
-                self.shape("..\\Images\\70\\GOLD_STENCH.gif")
+                self.shape("..\\Images\\70\\STENCH.gif")
+                #self.shape("..\\Images\\70\\GOLD_STENCH.gif")
             elif self.obj_type == 'BG':
-                self.shape("..\\Images\\70\\BREEZE_GOLD.gif")
+                self.shape("..\\Images\\70\\BREEZE.gif")
+                #self.shape("..\\Images\\70\\BREEZE_GOLD.gif")
             elif self.obj_type == 'G':
-                self.shape("..\\Images\\70\\GOLD.gif")
+                self.shape("..\\Images\\70\\EMPTY.gif")
+                #self.shape("..\\Images\\70\\GOLD.gif")
             elif self.obj_type == 'P':
                 self.shape("..\\Images\\70\\PIT.gif")
 
@@ -190,8 +194,8 @@ class Player(turtle.Turtle):
 player = Player()
 mes = ScreenMessage()
 room_map = []
-pit_location_list = []
-wumpus_location_list = []
+#pit_location_list = []
+#wumpus_location_list = []
 
 # start position of character
 def setup_map(board, init_index):
@@ -208,11 +212,12 @@ def setup_map(board, init_index):
             screen_y = val_y - (i * PIXEL_SIZE)
 
             row_map.append(Room(screen_x, screen_y, item))
+            """
             if item == "P":
                 pit_location_list.append(Point(i,j))
             elif item == "W":
                 wumpus_location_list.append(Point(i,j))
-
+            """
 
         room_map.append(row_map)
     # print Player according to its given location
@@ -262,10 +267,36 @@ def startGame(data: Map, init_pos):
         room_map[player.position.x][player.position.y].Discover()
         room_map[player.position.x][player.position.y].hideturtle()
 
-        room_item = data.OBJECT_DICT[data.map_data[player.position.x][player.position.y]]
-        message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(player.position.y) + ") - Found " + room_item
+        room_item = data.map_data[player.position.x][player.position.y]
+        message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(player.position.y) + ") - Found " + data.OBJECT_DICT[room_item]
         mes.writeMessage(message)
-                # check player is dead or not
+        # check player is dead or not
+        if room_item == "P":
+            print("Player fell into a pit!!")
+            died = True
+            break
+        elif room_item == "W":
+            print("Player got eaten by the wumpus!!")
+            died = True
+            break
+        elif room_item == "G":
+            player.gold += GOLD
+            print("Player found gold!")
+            data.map_data[player.position.x][player.position.y] = "-"
+        elif room_item == "BG":
+            player.gold += GOLD
+            print("Player found gold!")
+            data.map_data[player.position.x][player.position.y] = "B"
+        elif room_item == "BGS":
+            player.gold += GOLD
+            print("Player found gold!")
+            data.map_data[player.position.x][player.position.y] = "BS"
+        elif room_item == "GS":
+            player.gold += GOLD
+            print("Player found gold!")
+            data.map_data[player.position.x][player.position.y] = "S"
+
+        """
         for pit in pit_location_list:
             if pit == player.position:
                 print("Player fell into a pit!!")
@@ -277,6 +308,7 @@ def startGame(data: Map, init_pos):
                 print("Player got eaten by the wumpus!!")
                 died = True
                 break
+        """
 # chỉnh đồng nhất
 # nếu ăn vàng thì mất vàng
 # va chạm = cách so sánh pos trong pLayer và pos room, xet loại room rồi đánh giá died hay thêm vàng
