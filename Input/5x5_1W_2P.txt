@@ -1,0 +1,6 @@
+5
+- - - - -
+- G B B B
+- - BS PS BS
+- B BS W BS
+- B PS BS S
