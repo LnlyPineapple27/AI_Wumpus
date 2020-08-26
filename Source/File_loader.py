@@ -27,7 +27,15 @@ OBJECT_DICT = {"A": "Agent",
                "BS": "Breeze_Stench",
                "GS": "Gold_Stench",
                "BG": "Breeze_Gold",
-               "BGS": "Breeze_Gold_Stench"}
+               "BGS": "Breeze_Gold_Stench",
+               "SW": "Stench_Wumpus",
+               "BW": "Breeze_Wumpus",
+               "GW": "Gold_Wumpus",
+               "BSW": "Breeze_Stench_Wumpus",
+               "BGW":"Breeze_Gold_Wumpus",
+               "GSW": "Gold_Stench_Wumpus",
+               "BGSW": "Breeze_Gold_Stench_Wumpus"
+               }
 DEFAULT_NUM = {"W": 10,
                "P": 10,
                "G": 10,
@@ -219,8 +227,10 @@ def generate_map(input_dir=INPUT_DIR, size=DEFAULT_NUM["Size"], now=DEFAULT_NUM[
 
 if __name__ == "__main__":
     generate_map()
+    """
     input_list = Input()
     input_list.items()
     map = input_list.get_map("8x8_10G_10W_10P.txt")
     map.print_entities()
     print(map.random_spawning_location())
+    """

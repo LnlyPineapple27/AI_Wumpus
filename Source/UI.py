@@ -277,7 +277,7 @@ def startGame(data: Map, init_pos):
             print("Player fell into a pit!!")
             died = True
             break
-        elif room_item == "W":
+        elif room_item in ["W","GW","BW","SW","BGW","BSW","BGSW"]:
             print("Player got eaten by the wumpus!!")
             died = True
             break
