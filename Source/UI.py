@@ -8,7 +8,7 @@ val_x = 300
 val_y = 250
 PIXEL_SIZE = 70
 GOLD = 100
-DELAY_TIME = 1
+DELAY_TIME = 0.5
 DEATH_COST = 10000
 width = 1000
 height = 800
@@ -80,28 +80,38 @@ class Room(turtle.Turtle):
         else:
             if self.obj_type == '-':
                 self.shape("..\\Images\\70\\EMPTY.gif")
-            elif self.obj_type == 'B':
+            elif self.obj_type == 'B' or self.obj_type == 'BW':
                 self.shape("..\\Images\\70\\BREEZE.gif")
-            elif self.obj_type == 'BS':
+            elif self.obj_type == 'BS' or self.obj_type == 'BSW':
                 self.shape("..\\Images\\70\\BREEZE_STENCH.gif")
-            elif self.obj_type == 'BGS':
-                self.shape("..\\Images\\70\\BREEZE_STENCH.gif")
+            elif self.obj_type == 'BGS' or self.obj_type == 'BGSW':
+                self.shape("..\\Images\\70\\BREEZE_GOLD_STENCH.gif")
                 # self.shape("..\\Images\\70\\BREEZE_GOLD_STENCH.gif")
             elif self.obj_type == 'W':
                 self.shape("..\\Images\\70\\WUMPUS.gif")
             elif self.obj_type == 'S':
                 self.shape("..\\Images\\70\\STENCH.gif")
-            elif self.obj_type == 'GS':
-                self.shape("..\\Images\\70\\STENCH.gif")
+            elif self.obj_type == 'GS' or self.obj_type =='GSW':
+                self.shape("..\\Images\\70\\GOLD_STENCH.gif")
                 # self.shape("..\\Images\\70\\GOLD_STENCH.gif")
-            elif self.obj_type == 'BG':
-                self.shape("..\\Images\\70\\BREEZE.gif")
+            elif self.obj_type == 'BG' or self.obj_type == 'BGW':
+                self.shape("..\\Images\\70\\BREEZE_GOLD.gif")
                 # self.shape("..\\Images\\70\\BREEZE_GOLD.gif")
-            elif self.obj_type == 'G':
-                self.shape("..\\Images\\70\\EMPTY.gif")
+            elif self.obj_type == 'G' or self.obj_type == 'GW':
+                self.shape("..\\Images\\70\\GOLD.gif")
                 # self.shape("..\\Images\\70\\GOLD.gif")
             elif self.obj_type == 'P':
                 self.shape("..\\Images\\70\\PIT.gif")
+
+    def reveal_wumpus(self):
+        self.shape("..\\Images\\70\\WUMPUS.gif")
+        #self.showturtle()
+        #self.forward(0)
+
+    def reveal_pit(self):
+        self.shape("..\\Images\\70\\PIT.gif")
+        #self.showturtle()
+        #self.forward(0)
 
 
 class Player(turtle.Turtle):
@@ -168,24 +178,13 @@ class Player(turtle.Turtle):
     def destroy(self):
         self.goto(2000, 2000)
         self.hideturtle()
-
+    """
     def check_status(self, other: Room):
         if other.obj_type != 'W' and other.obj_type != 'P':
             return False
         else:
             return (self.xcor() == other.xcor()) and (self.ycor() == other.ycor())
-
-
-"""
-    def is_collision(self, other):
-        a = self.xcor() - other.xcor()
-        b = self.ycor() - other.ycor()
-        distance = math.sqrt((a ** 2) + (b ** 2))
-        if distance < 5:
-            return True
-        else:
-            return False
-"""
+    """
 
 # Global variable
 player = Player()
@@ -210,7 +209,7 @@ def setup_map(board, init_index):
             screen_x = ((-1) * val_x) + (j * PIXEL_SIZE)
             screen_y = val_y - (i * PIXEL_SIZE)
 
-            row_map.append(Room(screen_x, screen_y, item))
+            row_map.append(Room(screen_x, screen_y, item, False))
             """
             if item == "P":
                 pit_location_list.append(Point(i,j))
@@ -250,74 +249,85 @@ def startGame(data: Map, init_pos):
         player.position.y) + ") - Found " + room_item
     mes.writeMessage(message)
     while not died and not quit:
-
         # Time delay
         time.sleep(DELAY_TIME)
 
         # Check valid move
-        room_map[player.position.x][player.position.y].showturtle()
 
-        dir = ["Up", "Down", "LEFT", "Right"]
-        while dir:
-            player_dir = random.choice(dir)
-            dir.remove(player_dir)
-            if data.is_valid_move(player.position, player_dir):
-                player.move(player_dir)
-                break
+        next_action = random.choice(["Move"])#, "Shoot_arrow"
+        if next_action == "Move":
+            step += 1
+            room_map[player.position.x][player.position.y].showturtle()
 
-        room_map[player.position.x][player.position.y].Discover()
-        room_map[player.position.x][player.position.y].hideturtle()
+            dir = ["Up", "Down", "LEFT", "Right"]
+            while dir:
+                player_dir = random.choice(dir)
+                dir.remove(player_dir)
+                if data.is_valid_move(player.position, player_dir):
+                    player.move(player_dir)
+                    break
 
-        room_item = data.map_data[player.position.x][player.position.y]
-        message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(
-            player.position.y) + ") - Found " + data.OBJECT_DICT[room_item]
-        mes.writeMessage(message)
-        # check player is dead or not
-        if room_item == "P":
-            print("Player fell into a pit!!")
-            died = True
-            break
-        elif room_item in ["W","GW","BW","SW","BGW","BSW","BGSW"]:
-            print("Player got eaten by the wumpus!!")
-            died = True
-            break
-        elif room_item == "G":
-            player.gold += GOLD
-            print("Player found gold!")
-            data.map_data[player.position.x][player.position.y] = "-"
-        elif room_item == "BG":
-            player.gold += GOLD
-            print("Player found gold!")
-            data.map_data[player.position.x][player.position.y] = "B"
-        elif room_item == "BGS":
-            player.gold += GOLD
-            print("Player found gold!")
-            data.map_data[player.position.x][player.position.y] = "BS"
-        elif room_item == "GS":
-            player.gold += GOLD
-            print("Player found gold!")
-            data.map_data[player.position.x][player.position.y] = "S"
+            room_map[player.position.x][player.position.y].Discover()
+            room_map[player.position.x][player.position.y].hideturtle()
 
-        """
-        for pit in pit_location_list:
-            if pit == player.position:
+            room_item = data.map_data[player.position.x][player.position.y]
+            message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(
+                player.position.y) + ") - Found " + data.OBJECT_DICT[room_item]
+            mes.writeMessage(message)
+            # check player is dead or not
+            if room_item == "P":
                 print("Player fell into a pit!!")
+                player.destroy()
+                room_map[player.position.x][player.position.y].reveal_pit()
+                room_map[player.position.x][player.position.y].showturtle()
+                window.update()
+                time.sleep(2)
                 died = True
                 break
-
-        for wumpus in wumpus_location_list:
-            if wumpus == player.position:
+            elif room_item in ["W","GW","BW","SW","BGW","BSW","BGSW"]:
                 print("Player got eaten by the wumpus!!")
+                player.destroy()
+                room_map[player.position.x][player.position.y].reveal_wumpus()
+                room_map[player.position.x][player.position.y].showturtle()
+                window.update()
+                time.sleep(2)
                 died = True
                 break
-        """
-        # chỉnh đồng nhất
-        # nếu ăn vàng thì mất vàng
-        # va chạm = cách so sánh pos trong pLayer và pos room, xet loại room rồi đánh giá died hay thêm vàng
+            elif room_item == "G":
+                player.gold += GOLD
+                print("Player found gold!")
+                data.map_data[player.position.x][player.position.y] = "-"
+            elif room_item == "BG":
+                player.gold += GOLD
+                print("Player found gold!")
+                data.map_data[player.position.x][player.position.y] = "B"
+            elif room_item == "BGS":
+                player.gold += GOLD
+                print("Player found gold!")
+                data.map_data[player.position.x][player.position.y] = "BS"
+            elif room_item == "GS":
+                player.gold += GOLD
+                print("Player found gold!")
+                data.map_data[player.position.x][player.position.y] = "S"
+
+        elif next_action == "Shoot_arrow":
+            dir = ["Up", "Down", "LEFT", "Right"]
+
+            shoot_dir = random.choice(dir)
+            if data.player_shoot(player.position, shoot_dir):
+                print("Player killed a wumpus in this room")
+            else:
+                print("Player wasted an arrow")
+        else:
+            pass
 
         window.update()
+        # nếu ăn vàng thì mất vàng treen map
+        # va chạm = cách so sánh pos pLayer và pos room, xét loại room rồi đánh giá died hay thêm vàng
 
-        step += 1
+
+
+
     print("END game:")
     # turtle.exitonclick()
     endGame()
@@ -326,7 +336,7 @@ def startGame(data: Map, init_pos):
 if __name__ == "__main__":
     input_list = Input()
     input_list.items()
-    map = input_list.get_map("8x8_10G_10W_10P.txt")
+    map = input_list.get_map("input.txt")
     # map.print_entities()
     init_pos = map.random_spawning_location()
     # messagebox.showinfo("UI will started!!","Click ok to start!!!")

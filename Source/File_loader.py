@@ -76,7 +76,7 @@ class Map:
             return True
         return False
 
-    def is_valid_move(self, cur_pos, direction):
+    def is_valid_move(self, cur_pos: Point, direction):
         if direction == "Up":
             return self.is_in_map(cur_pos.up())
         elif direction == "Down":
@@ -87,6 +87,29 @@ class Map:
             return self.is_in_map(cur_pos.right())
         else:
             return False
+
+    def wumpus_got_kiled(self, wumpus_pos: Point):
+        room_item = self.map_data[wumpus_pos.x][wumpus_pos.y]
+        if room_item in ["W","GW","BW","SW","BGW","BSW","BGSW"]:
+            self.map_data[wumpus_pos.x][wumpus_pos.y] = room_item.replace('W', '')
+            return True
+        else:
+            return False
+
+    def player_shoot(self, cur_pos: Point, direction):
+        if direction == "Up":
+            if self.is_in_map(cur_pos.up()):
+                return self.wumpus_got_kiled(cur_pos.up())
+        elif direction == "Down":
+            if self.is_in_map(cur_pos.down()):
+                return self.wumpus_got_kiled(cur_pos.down())
+        elif direction == "Left":
+            if self.is_in_map(cur_pos.left()):
+                return self.wumpus_got_kiled(cur_pos.left())
+        elif direction == "Right":
+            if self.is_in_map(cur_pos.right()):
+                return self.wumpus_got_kiled(cur_pos.right())
+        return False
 
 
 class Input:
