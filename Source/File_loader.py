@@ -36,9 +36,9 @@ OBJECT_DICT = {"A": "Agent",
                "GSW": "Gold_Stench_Wumpus",
                "BGSW": "Breeze_Gold_Stench_Wumpus"
                }
-DEFAULT_NUM = {"W": 10,
+DEFAULT_NUM = {"W": 1,
                "P": 10,
-               "G": 10,
+               "G": 1,
                "Size": 8}
 SYM = ["A", "W", "P"]
 SIG = ["B", "S", "G", "-"]
@@ -177,7 +177,7 @@ def add_entity(mat, sym, sign, lop):
                     mat[r.x][r.y] = sign
                 else:
                     mat[r.x][r.y] += sign if sign not in mat[r.x][r.y] else ""
-        if sym == "G":
+        if sym == "G" or sym == "W":
             mat[pnt.x][pnt.y] = sym if is_empty(pnt) else mat[pnt.x][pnt.y] + sym
         else:
             mat[pnt.x][pnt.y] = sym
