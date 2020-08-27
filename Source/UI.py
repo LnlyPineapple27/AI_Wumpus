@@ -8,7 +8,7 @@ val_x = 300
 val_y = 250
 PIXEL_SIZE = 70
 GOLD = 100
-DELAY_TIME = 0.5
+DELAY_TIME = 1
 DEATH_COST = 10000
 width = 1000
 height = 800
@@ -50,7 +50,7 @@ class ScreenMessage(turtle.Turtle):
         self.penup()
         self.speed(0)
         self.goto((-1) * width / 3, height / 3 + 50)
-        # self.write(self.message, font=style, align='left')
+        self.write("Hello Oniiii-chan", font=style, align='left')
         self.hideturtle()
 
     def writeMessage(self, message=""):
@@ -172,6 +172,7 @@ class Player(turtle.Turtle):
         else:
             pass
 
+
     def exit(self):
         self.goto(self.xcor(), self.ycor())
 
@@ -260,23 +261,24 @@ def startGame(data: Map, init_pos):
             room_map[player.position.x][player.position.y].showturtle()
 
             dir = ["Up", "Down", "Left", "Right"]
-            pl_x = player.position.x
-            pl_y = player.position.y
             while dir:
                 player_dir = random.choice(dir)
                 dir.remove(player_dir)
                 if data.is_valid_move(player.position, player_dir):
                     player.move(player_dir)
+                    window.update()
                     break
 
-            room_map[pl_x][pl_y].Discover()
+            pl_x = player.position.x
+            pl_y = player.position.y
             room_map[pl_x][pl_y].hideturtle()
-
+            room_map[pl_x][pl_y].Discover()
             room_item = data.map_data[pl_x][pl_y]
             message = "Current pos: (" + str(data.map_size - pl_x - 1) + ", " + str(
                 pl_y) + ") - Found " + data.OBJECT_DICT[room_item]
             mes.writeMessage(message)
             # check player is dead or not
+
             if "P" in room_item:
                 print("Player fell into a pit!!")
                 player.destroy()
