@@ -10,8 +10,8 @@ from operator import eq, neg
 
 from sortedcontainers import SortedSet
 
-import search as search
-from utils import argmin_random_tie, count, first, extend
+import aima.search as search
+from aima.utils import argmin_random_tie, count, first, extend
 
 
 class CSP(search.Problem):
@@ -1187,7 +1187,7 @@ def ac_solver(csp, arc_heuristic=sat_up):
 
 def ac_search_solver(csp, arc_heuristic=sat_up):
     """Arc consistency (search interface)"""
-    from search import depth_first_tree_search
+    from aima.search import depth_first_tree_search
     solution = None
     try:
         solution = depth_first_tree_search(ACSearchSolver(csp, arc_heuristic=arc_heuristic)).state

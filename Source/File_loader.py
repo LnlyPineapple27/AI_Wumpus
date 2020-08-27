@@ -72,7 +72,7 @@ class Map:
         return Point(int(row_pos), int(col_pos))
 
     def is_in_map(self, cur_pos: Point):
-        if cur_pos.x >= 0 and cur_pos.x < self.map_size and cur_pos.y >= 0 and cur_pos.y < self.map_size:
+        if 0 <= cur_pos.x < self.map_size and 0 <= cur_pos.y < self.map_size:
             return True
         return False
 
@@ -88,9 +88,9 @@ class Map:
         else:
             return False
 
-    def wumpus_got_kiled(self, wumpus_pos: Point):
+    def wumpus_got_killed(self, wumpus_pos: Point):
         room_item = self.map_data[wumpus_pos.x][wumpus_pos.y]
-        if room_item in ["W","GW","BW","SW","BGW","BSW","BGSW"]:
+        if "W" in room_item:
             self.map_data[wumpus_pos.x][wumpus_pos.y] = room_item.replace('W', '')
             return True
         else:
@@ -99,16 +99,16 @@ class Map:
     def player_shoot(self, cur_pos: Point, direction):
         if direction == "Up":
             if self.is_in_map(cur_pos.up()):
-                return self.wumpus_got_kiled(cur_pos.up())
+                return self.wumpus_got_killed(cur_pos.up())
         elif direction == "Down":
             if self.is_in_map(cur_pos.down()):
-                return self.wumpus_got_kiled(cur_pos.down())
+                return self.wumpus_got_killed(cur_pos.down())
         elif direction == "Left":
             if self.is_in_map(cur_pos.left()):
-                return self.wumpus_got_kiled(cur_pos.left())
+                return self.wumpus_got_killed(cur_pos.left())
         elif direction == "Right":
             if self.is_in_map(cur_pos.right()):
-                return self.wumpus_got_kiled(cur_pos.right())
+                return self.wumpus_got_killed(cur_pos.right())
         return False
 
 
