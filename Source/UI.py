@@ -2,24 +2,29 @@ import turtle
 import time
 from File_loader import *
 import sys
-from  wumpus_data_world import *
-# ---------------------------------------------------------------
+from wumpus_data_world import *
+
+# ---------------------------------Front-end stuff------------------------
 val_x = 300
-val_y = 250
+val_y = 270
 PIXEL_SIZE = 70
-GOLD = 100
-DELAY_TIME = 0.2
-DEATH_COST = 10000
 width = 1000
-height = 800
+height = 820
+DELAY_TIME = 0.7
 style = ('Courier', 20, 'italic')
+# --------------------------------------COST FOR SCORING---------------------------
+GOLD = 100
+ARROW_COST = 100
+DEATH_COST = 10000
+STEP_COST = 10
+EXIT_MAP = 10
 # --------------------------------------------Initial things-----------------------------
 window = turtle.Screen()
 root = turtle.Screen()._root
 root.iconbitmap("..\\Images\\icon\\game.ico")
 window.bgcolor('black')
 window.title('AI WUMPUS')
-window.setup(width, height, startx=0, starty=20)
+window.setup(width, height, startx=0, starty=10)
 window.tracer(0)
 
 images = ["..\\Images\\70\\DOWN.gif",
@@ -51,14 +56,19 @@ class ScreenMessage(turtle.Turtle):
         self.color('yellow')
         self.penup()
         self.speed(0)
-        self.goto((-1) * width / 3, height / 3 + 50)
-        self.write("Hello Oniiii-chan", font=style, align='left')
+        self.goto((-1) * width / 3, height / 3 + 90)
+        self.write("Welcome, HUNTER!!!!", font=style, align='left')
         self.hideturtle()
-        time.sleep(DELAY_TIME)
+        time.sleep(1)
 
-    def writeMessage(self, message=""):
+    def writeMessage(self, message: str = "", score: int = -1, step: int = 0, gold_found: int = 0):
         self.clear()
+        self.goto((-1) * width / 3, height / 3 + 90)
         self.write(message, font=style, align='left')
+        self.goto((-1) * width / 3, height / 3 + 60)
+        self.write("Score: " + str(score) + "\t\tGold found: " + str(gold_found), font=style, align='left')
+        self.goto((-1) * width / 3, height / 3 + 30)
+        self.write("Step: " + str(step), font=style, align='left')
         self.hideturtle()
 
 
@@ -88,33 +98,33 @@ class Room(turtle.Turtle):
             elif self.obj_type == 'BS' or self.obj_type == 'BSW':
                 self.shape("..\\Images\\70\\BREEZE_STENCH.gif")
             elif self.obj_type == 'BGS' or self.obj_type == 'BGSW':
-                self.shape("..\\Images\\70\\BREEZE_GOLD_STENCH.gif")
+                self.shape("..\\Images\\70\\BREEZE_STENCH.gif")
                 # self.shape("..\\Images\\70\\BREEZE_GOLD_STENCH.gif")
             elif self.obj_type == 'W':
-                self.shape("..\\Images\\70\\WUMPUS.gif")
+                self.shape("..\\Images\\70\\EMPTY.gif")
             elif self.obj_type == 'S':
                 self.shape("..\\Images\\70\\STENCH.gif")
-            elif self.obj_type == 'GS' or self.obj_type =='GSW':
-                self.shape("..\\Images\\70\\GOLD_STENCH.gif")
+            elif self.obj_type == 'GS' or self.obj_type == 'GSW':
+                self.shape("..\\Images\\70\\STENCH.gif")
                 # self.shape("..\\Images\\70\\GOLD_STENCH.gif")
             elif self.obj_type == 'BG' or self.obj_type == 'BGW':
-                self.shape("..\\Images\\70\\BREEZE_GOLD.gif")
+                self.shape("..\\Images\\70\\BREEZE.gif")
                 # self.shape("..\\Images\\70\\BREEZE_GOLD.gif")
             elif self.obj_type == 'G' or self.obj_type == 'GW':
-                self.shape("..\\Images\\70\\GOLD.gif")
+                self.shape("..\\Images\\70\\EMPTY.gif")
                 # self.shape("..\\Images\\70\\GOLD.gif")
             elif self.obj_type == 'P':
                 self.shape("..\\Images\\70\\PIT.gif")
 
     def reveal_wumpus(self):
         self.shape("..\\Images\\70\\WUMPUS.gif")
-        #self.showturtle()
-        #self.forward(0)
+        # self.showturtle()
+        # self.forward(0)
 
     def reveal_pit(self):
         self.shape("..\\Images\\70\\PIT.gif")
-        #self.showturtle()
-        #self.forward(0)
+        # self.showturtle()
+        # self.forward(0)
 
 
 class Player(turtle.Turtle):
@@ -125,10 +135,11 @@ class Player(turtle.Turtle):
         self.color('green')
         self.penup()
         self.speed(0)
-        self.gold = 0
+        self.score = 0
+        self.gold_found = 0
 
     def go_up(self):
-        #print("Player go up")
+        # print("Player go up")
         move_to_x = self.xcor()
         move_to_y = self.ycor() + PIXEL_SIZE
         self.shape("..\\Images\\70\\UP.gif")
@@ -137,7 +148,7 @@ class Player(turtle.Turtle):
         self.position.x -= 1
 
     def go_down(self):
-        #print("Player go down")
+        # print("Player go down")
         move_to_x = self.xcor()
         move_to_y = self.ycor() - PIXEL_SIZE
         self.shape("..\\Images\\70\\DOWN.gif")
@@ -146,7 +157,7 @@ class Player(turtle.Turtle):
         self.position.x += 1
 
     def go_left(self):
-        #print("Player go left")
+        # print("Player go left")
         move_to_x = self.xcor() - PIXEL_SIZE
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\LEFT.gif")
@@ -155,7 +166,7 @@ class Player(turtle.Turtle):
         self.position.y -= 1
 
     def go_right(self):
-        #print("Player go right")
+        # print("Player go right")
         move_to_x = self.xcor() + PIXEL_SIZE
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\RIGHT.gif")
@@ -175,13 +186,13 @@ class Player(turtle.Turtle):
         else:
             pass
 
-
     def exit(self):
         self.goto(self.xcor(), self.ycor())
 
     def destroy(self):
         self.goto(2000, 2000)
         self.hideturtle()
+
     """
     def check_status(self, other: Room):
         if other.obj_type != 'W' and other.obj_type != 'P':
@@ -189,6 +200,7 @@ class Player(turtle.Turtle):
         else:
             return (self.xcor() == other.xcor()) and (self.ycor() == other.ycor())
     """
+
 
 # Global variable
 player = Player()
@@ -248,20 +260,14 @@ def startGame(data: Map, init_pos):
     died = False
     quit = False
 
-    """
-    room_item = data.OBJECT_DICT[data.map_data[player.position.x][player.position.y]]
-    message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(
-        player.position.y) + ") - Found " + room_item
-    mes.writeMessage(message)
-    """
     pl_x = player.position.x
     pl_y = player.position.y
     room_map[pl_x][pl_y].hideturtle()
     room_map[pl_x][pl_y].Discover()
     room_item = data.map_data[pl_x][pl_y]
-    message = "Current pos: (" + str(data.map_size - pl_x - 1) + ", " + str(
-        pl_y) + ") - Found " + data.OBJECT_DICT[room_item]
-    mes.writeMessage(message)
+    message = "Current pos: " + str(point_to_room(player.position, data.map_size).coordinate()) + "\tFound " + \
+              data.OBJECT_DICT[room_item]
+    mes.writeMessage(message, player.score, step, player.gold_found)
     # check player is dead or not
 
     if "P" in room_item:
@@ -283,14 +289,15 @@ def startGame(data: Map, init_pos):
         died = True
 
     elif "G" in room_item:
-        player.gold += GOLD
+        player.score += GOLD
+        player.gold_found += 1
         print("Player found gold!")
-        data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G","")
+        data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G", "")
         data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
     while not died and not quit:
         # Time delay
         time.sleep(DELAY_TIME)
-        #print(KB.clauses)
+        # print(KB.clauses)
         # Check valid move
         room = point_to_room(player.position, data.map_size)
         room_sym = room.to_string()
@@ -318,18 +325,18 @@ def startGame(data: Map, init_pos):
         if cl not in KB.clauses:
             KB.tell(cl)
         print(KB.clauses)
-        next_action = random.choice(["Move"])#, "Shoot_arrow"
+        next_action = random.choice(["Move"])  # , "Shoot_arrow"
 
         if next_action == "Move":
-            step += 1
             room_map[player.position.x][player.position.y].showturtle()
-
 
             dir = think(map, KB, player.position)
             while dir:
                 player_dir = random.choice(dir)
                 dir.remove(player_dir)
                 if data.is_valid_move(player.position, player_dir):
+                    step += 1
+                    player.score -= STEP_COST
                     player.move(player_dir)
                     break
 
@@ -338,9 +345,9 @@ def startGame(data: Map, init_pos):
             room_map[pl_x][pl_y].hideturtle()
             room_map[pl_x][pl_y].Discover()
             room_item = data.map_data[pl_x][pl_y]
-            message = "Current pos: (" + str(data.map_size - pl_x - 1) + ", " + str(
-                pl_y) + ") - Found " + data.OBJECT_DICT[room_item]
-            mes.writeMessage(message)
+            message = "Current pos: " + str(point_to_room(player.position, data.map_size).coordinate()) + "\tFound " + \
+                      data.OBJECT_DICT[room_item]
+            mes.writeMessage(message, player.score, step, player.gold_found)
             # check player is dead or not
 
             if "P" in room_item:
@@ -362,9 +369,10 @@ def startGame(data: Map, init_pos):
                 died = True
 
             elif "G" in room_item:
-                player.gold += GOLD
+                player.score += GOLD
+                player.gold_found += 1
                 print("Player found gold!")
-                data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G","")
+                data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G", "")
                 data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
             else:
                 pass
@@ -384,9 +392,6 @@ def startGame(data: Map, init_pos):
         window.update()
         # nếu ăn vàng thì mất vàng treen map
         # va chạm = cách so sánh pos pLayer và pos room, xét loại room rồi đánh giá died hay thêm vàng
-
-
-
 
     print("END game:")
     # turtle.exitonclick()
