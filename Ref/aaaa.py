@@ -22,7 +22,7 @@ def main():
     KB.tell(aima.utils.expr('S(E)'))
     KB.tell(aima.utils.expr('S(C)'))
     # Get information from the knowledge base with ask
-    p = KB.ask(aima.utils.expr('WUM(A)'))
+    p = KB.ask(aima.utils.expr('WUM(B)'))
     b = aima.logic.fol_fc_ask(KB, aima.utils.expr('WUM(x)'))
     # Print answers
     print(p)

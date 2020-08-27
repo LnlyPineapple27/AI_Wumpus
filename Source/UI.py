@@ -8,7 +8,7 @@ val_x = 300
 val_y = 250
 PIXEL_SIZE = 70
 GOLD = 100
-DELAY_TIME = 1
+DELAY_TIME = 0.2
 DEATH_COST = 10000
 width = 1000
 height = 800
@@ -290,16 +290,42 @@ def startGame(data: Map, init_pos):
     while not died and not quit:
         # Time delay
         time.sleep(DELAY_TIME)
-
+        #print(KB.clauses)
         # Check valid move
-
+        room = point_to_room(player.position, data.map_size)
+        room_sym = room.to_string()
+        if '-' in room_item:
+            cl = utils.expr("NULL({})".format(room_sym))
+            if cl not in KB.clauses:
+                KB.tell(cl)
+        if 'B' in room_item:
+            cls = [utils.expr("B({})".format(room_sym))]
+            pit = KB.ask(utils.expr("PIT({})".format(room_sym)))
+            if pit:
+                cls.append(utils.expr("PIT({})".format(room_sym)))
+            for cl in cls:
+                if cl not in KB.clauses:
+                    KB.tell(cl)
+        if 'S' in room_item:
+            cls = [utils.expr("S({})".format(room_sym))]
+            wum = KB.ask(utils.expr("WUM({})".format(room_sym)))
+            if wum:
+                cls.append(utils.expr("WUM({})".format(room_sym)))
+            for cl in cls:
+                if cl not in KB.clauses:
+                    KB.tell(cl)
+        cl = utils.expr("EXP({})".format(room_sym))
+        if cl not in KB.clauses:
+            KB.tell(cl)
+        print(KB.clauses)
         next_action = random.choice(["Move"])#, "Shoot_arrow"
-        
+
         if next_action == "Move":
             step += 1
             room_map[player.position.x][player.position.y].showturtle()
 
-            dir = ["Up", "Down", "Left", "Right"]
+
+            dir = think(map, KB, player.position)
             while dir:
                 player_dir = random.choice(dir)
                 dir.remove(player_dir)
@@ -343,6 +369,7 @@ def startGame(data: Map, init_pos):
             else:
                 pass
 
+
         elif next_action == "Shoot_arrow":
             dir = ["Up", "Down", "LEFT", "Right"]
 
@@ -369,7 +396,7 @@ def startGame(data: Map, init_pos):
 if __name__ == "__main__":
     input_list = Input()
     input_list.items()
-    map = input_list.get_map("8x8_1G_1W_10P.txt")
+    map = input_list.get_map("10x10_10G_3W_3P.txt")
     # map.print_entities()
     init_pos = map.random_spawning_location()
     # messagebox.showinfo("UI will started!!","Click ok to start!!!")
