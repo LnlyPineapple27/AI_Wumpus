@@ -52,6 +52,7 @@ class ScreenMessage(turtle.Turtle):
         self.goto((-1) * width / 3, height / 3 + 50)
         self.write("Hello Oniiii-chan", font=style, align='left')
         self.hideturtle()
+        time.sleep(DELAY_TIME)
 
     def writeMessage(self, message=""):
         self.clear()
@@ -245,10 +246,45 @@ def startGame(data: Map, init_pos):
     died = False
     quit = False
 
+    """
     room_item = data.OBJECT_DICT[data.map_data[player.position.x][player.position.y]]
     message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(
         player.position.y) + ") - Found " + room_item
     mes.writeMessage(message)
+    """
+    pl_x = player.position.x
+    pl_y = player.position.y
+    room_map[pl_x][pl_y].hideturtle()
+    room_map[pl_x][pl_y].Discover()
+    room_item = data.map_data[pl_x][pl_y]
+    message = "Current pos: (" + str(data.map_size - pl_x - 1) + ", " + str(
+        pl_y) + ") - Found " + data.OBJECT_DICT[room_item]
+    mes.writeMessage(message)
+    # check player is dead or not
+
+    if "P" in room_item:
+        print("Player fell into a pit!!")
+        player.destroy()
+        room_map[pl_x][pl_y].reveal_pit()
+        room_map[pl_x][pl_y].showturtle()
+        window.update()
+        time.sleep(2)
+        died = True
+
+    elif "W" in room_item:
+        print("Player got eaten by the wumpus!!")
+        player.destroy()
+        room_map[pl_x][pl_y].reveal_wumpus()
+        room_map[pl_x][pl_y].showturtle()
+        window.update()
+        time.sleep(2)
+        died = True
+
+    elif "G" in room_item:
+        player.gold += GOLD
+        print("Player found gold!")
+        data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G","")
+        data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
     while not died and not quit:
         # Time delay
         time.sleep(DELAY_TIME)
@@ -266,7 +302,6 @@ def startGame(data: Map, init_pos):
                 dir.remove(player_dir)
                 if data.is_valid_move(player.position, player_dir):
                     player.move(player_dir)
-                    window.update()
                     break
 
             pl_x = player.position.x
