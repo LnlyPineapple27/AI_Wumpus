@@ -8,7 +8,7 @@ val_x = 300
 val_y = 250
 PIXEL_SIZE = 70
 GOLD = 100
-DELAY_TIME = 0.5
+DELAY_TIME = 1
 DEATH_COST = 10000
 width = 1000
 height = 800
@@ -52,8 +52,9 @@ class ScreenMessage(turtle.Turtle):
         self.penup()
         self.speed(0)
         self.goto((-1) * width / 3, height / 3 + 50)
-        # self.write(self.message, font=style, align='left')
+        self.write("Hello Oniiii-chan", font=style, align='left')
         self.hideturtle()
+        time.sleep(DELAY_TIME)
 
     def writeMessage(self, message=""):
         self.clear()
@@ -174,6 +175,7 @@ class Player(turtle.Turtle):
         else:
             pass
 
+
     def exit(self):
         self.goto(self.xcor(), self.ycor())
 
@@ -246,10 +248,45 @@ def startGame(data: Map, init_pos):
     died = False
     quit = False
 
+    """
     room_item = data.OBJECT_DICT[data.map_data[player.position.x][player.position.y]]
     message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(
         player.position.y) + ") - Found " + room_item
     mes.writeMessage(message)
+    """
+    pl_x = player.position.x
+    pl_y = player.position.y
+    room_map[pl_x][pl_y].hideturtle()
+    room_map[pl_x][pl_y].Discover()
+    room_item = data.map_data[pl_x][pl_y]
+    message = "Current pos: (" + str(data.map_size - pl_x - 1) + ", " + str(
+        pl_y) + ") - Found " + data.OBJECT_DICT[room_item]
+    mes.writeMessage(message)
+    # check player is dead or not
+
+    if "P" in room_item:
+        print("Player fell into a pit!!")
+        player.destroy()
+        room_map[pl_x][pl_y].reveal_pit()
+        room_map[pl_x][pl_y].showturtle()
+        window.update()
+        time.sleep(2)
+        died = True
+
+    elif "W" in room_item:
+        print("Player got eaten by the wumpus!!")
+        player.destroy()
+        room_map[pl_x][pl_y].reveal_wumpus()
+        room_map[pl_x][pl_y].showturtle()
+        window.update()
+        time.sleep(2)
+        died = True
+
+    elif "G" in room_item:
+        player.gold += GOLD
+        print("Player found gold!")
+        data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G","")
+        data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
     while not died and not quit:
         # Time delay
         time.sleep(DELAY_TIME)
@@ -262,8 +299,6 @@ def startGame(data: Map, init_pos):
             room_map[player.position.x][player.position.y].showturtle()
 
             dir = ["Up", "Down", "Left", "Right"]
-            pl_x = player.position.x
-            pl_y = player.position.y
             while dir:
                 player_dir = random.choice(dir)
                 dir.remove(player_dir)
@@ -271,14 +306,16 @@ def startGame(data: Map, init_pos):
                     player.move(player_dir)
                     break
 
-            room_map[pl_x][pl_y].Discover()
+            pl_x = player.position.x
+            pl_y = player.position.y
             room_map[pl_x][pl_y].hideturtle()
-
+            room_map[pl_x][pl_y].Discover()
             room_item = data.map_data[pl_x][pl_y]
             message = "Current pos: (" + str(data.map_size - pl_x - 1) + ", " + str(
                 pl_y) + ") - Found " + data.OBJECT_DICT[room_item]
             mes.writeMessage(message)
             # check player is dead or not
+
             if "P" in room_item:
                 print("Player fell into a pit!!")
                 player.destroy()
