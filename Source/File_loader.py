@@ -36,9 +36,9 @@ OBJECT_DICT = {"A": "Agent",
                "GSW": "Gold_Stench_Wumpus",
                "BGSW": "Breeze_Gold_Stench_Wumpus"
                }
-DEFAULT_NUM = {"W": 1,
+DEFAULT_NUM = {"W": 10,
                "P": 10,
-               "G": 1,
+               "G": 10,
                "Size": 8}
 SYM = ["A", "W", "P"]
 SIG = ["B", "S", "G", "-"]
@@ -219,7 +219,7 @@ def create_entities_matrix(size=DEFAULT_NUM["Size"], now=DEFAULT_NUM["W"], nop=D
     mat = [["-" for _ in range(size)] for _ in range(size)]  # generate empty size x size map
     wl = generate_point(now, size - 1, None)
     pl = generate_point(nop, size - 1, wl)
-    gl = generate_point(nog, size - 1, wl + pl)
+    gl = generate_point(nog, size - 1, pl)
     mat = add_entity(mat, "P", "B", pl)
     mat = add_entity(mat, "G", None, gl)
     mat = add_entity(mat, "W", "S", wl)
