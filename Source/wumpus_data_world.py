@@ -52,8 +52,10 @@ class Room:
 
 def init_KB():
     # Init
+    # ADJ kề
     sen = ["(ADJ(x, y) & ADJ(x, z) & B(y) & B(z)) ==> PIT(x)",
-           "(ADJ(x, y) & ADJ(x, z) & S(y) & S(z)) ==> WUM(x)"]
+           "(ADJ(x, y) & ADJ(x, z) & S(y) & S(z)) ==> WUM(x)"
+           "ADJ(x, y) & NULL(x) ==> SAFE(y)"]
     # Create an array to hold clauses
     clauses = [utils.expr(s) for s in sen]
     # Create a first-order logic knowledge base (KB) with clauses

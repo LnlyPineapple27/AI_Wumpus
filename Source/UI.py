@@ -128,7 +128,7 @@ class Player(turtle.Turtle):
         self.gold = 0
 
     def go_up(self):
-        print("Player go up")
+        #print("Player go up")
         move_to_x = self.xcor()
         move_to_y = self.ycor() + PIXEL_SIZE
         self.shape("..\\Images\\70\\UP.gif")
@@ -137,7 +137,7 @@ class Player(turtle.Turtle):
         self.position.x -= 1
 
     def go_down(self):
-        print("Player go down")
+        #print("Player go down")
         move_to_x = self.xcor()
         move_to_y = self.ycor() - PIXEL_SIZE
         self.shape("..\\Images\\70\\DOWN.gif")
@@ -146,7 +146,7 @@ class Player(turtle.Turtle):
         self.position.x += 1
 
     def go_left(self):
-        print("Player go left")
+        #print("Player go left")
         move_to_x = self.xcor() - PIXEL_SIZE
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\LEFT.gif")
@@ -155,7 +155,7 @@ class Player(turtle.Turtle):
         self.position.y -= 1
 
     def go_right(self):
-        print("Player go right")
+        #print("Player go right")
         move_to_x = self.xcor() + PIXEL_SIZE
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\RIGHT.gif")
@@ -294,6 +294,7 @@ def startGame(data: Map, init_pos):
         # Check valid move
 
         next_action = random.choice(["Move"])#, "Shoot_arrow"
+        
         if next_action == "Move":
             step += 1
             room_map[player.position.x][player.position.y].showturtle()
@@ -368,7 +369,7 @@ def startGame(data: Map, init_pos):
 if __name__ == "__main__":
     input_list = Input()
     input_list.items()
-    map = input_list.get_map("input.txt")
+    map = input_list.get_map("8x8_1G_1W_10P.txt")
     # map.print_entities()
     init_pos = map.random_spawning_location()
     # messagebox.showinfo("UI will started!!","Click ok to start!!!")
