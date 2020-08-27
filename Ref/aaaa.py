@@ -1,23 +1,33 @@
 # Import libraries
-import utils
-import logic
+import aima.utils
+import aima.logic
+
+
 # The main entry point for this module
 def main():
+    # Init
+    sen = ["(ADJ(x, y) & ADJ(x, z) & B(y) & B(z)) ==> PIT(x)",
+           "(ADJ(x, y) & ADJ(x, z) & S(y) & S(z)) ==> WUM(x)"]
     # Create an array to hold clauses
-    clauses = []
-    # Add first-order logic clauses (rules and fact)
-    clauses.append(utils.expr("(ADJ(x, y) & ADJ(x, z) & B(y) & B(z)) ==> PIT(x)"))
+    clauses = [aima.utils.expr(s) for s in sen]
     # Create a first-order logic knowledge base (KB) with clauses
-    KB = logic.FolKB(clauses)
+    KB = aima.logic.FolKB(clauses)
     # Add rules and facts with tell
-    KB.tell(utils.expr('ADJ(A, E)'))
-    KB.tell(utils.expr('ADJ(A, C)'))
-    KB.tell(utils.expr('B(E)'))
-    KB.tell(utils.expr('B(C)'))
+    KB.tell(aima.utils.expr('ADJ(A, E)'))
+    KB.tell(aima.utils.expr('ADJ(A, C)'))
+    KB.tell(aima.utils.expr('B(E)'))
+    KB.tell(aima.utils.expr('B(C)'))
+    KB.tell(aima.utils.expr('ADJ(A, E)'))
+    KB.tell(aima.utils.expr('ADJ(A, C)'))
+    KB.tell(aima.utils.expr('S(E)'))
+    KB.tell(aima.utils.expr('S(C)'))
     # Get information from the knowledge base with ask
-    p = KB.ask(utils.expr('PIT(A)'))
-    b = logic.fol_fc_ask(KB, utils.expr('PIT(x)'))
+    p = KB.ask(aima.utils.expr('WUM(A)'))
+    b = aima.logic.fol_fc_ask(KB, aima.utils.expr('WUM(x)'))
     # Print answers
-    print(list(p))
+    print(p)
+    print(list(b))
+
+
 # Tell python to run main method
-if __name__ == "__main__": main()
+main()

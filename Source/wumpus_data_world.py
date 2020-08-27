@@ -44,11 +44,17 @@ def point_to_room(pnt: Point, size):
 
 
 class Room:
-    def __init__(self, pos:RoomCoordinate, obj:str):
+    def __init__(self, pos:RoomCoordinate, sym:str):
         self.position = pos
-        self.obj = obj
-        self.sym = self.name()
+        self.sym = sym
+        self.name = "R{}{}".format(self.position.x, self.position.y)
 
-    def name(self):
-        return "R{}{}".format(self.position.x, self.position.y)
 
+def init_KB():
+    # Init
+    sen = ["(ADJ(x, y) & ADJ(x, z) & B(y) & B(z)) ==> PIT(x)",
+           "(ADJ(x, y) & ADJ(x, z) & S(y) & S(z)) ==> WUM(x)"]
+    # Create an array to hold clauses
+    clauses = [utils.expr(s) for s in sen]
+    # Create a first-order logic knowledge base (KB) with clauses
+    return logic.FolKB(clauses)

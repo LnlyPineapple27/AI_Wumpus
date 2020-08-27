@@ -2,7 +2,7 @@ import turtle
 import time
 from File_loader import *
 import sys
-
+from  wumpus_data_world import *
 # ---------------------------------------------------------------
 val_x = 300
 val_y = 250
@@ -37,6 +37,8 @@ images = ["..\\Images\\70\\DOWN.gif",
           "..\\Images\\70\\EMPTY.gif",
           "..\\Images\\70\\STENCH.gif",
           "..\\Images\\70\\UNKNOWN.gif"]
+KB = init_KB()
+
 for img in images:
     turtle.register_shape(img)
 
