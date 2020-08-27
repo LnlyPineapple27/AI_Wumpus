@@ -259,7 +259,9 @@ def startGame(data: Map, init_pos):
             step += 1
             room_map[player.position.x][player.position.y].showturtle()
 
-            dir = ["Up", "Down", "LEFT", "Right"]
+            dir = ["Up", "Down", "Left", "Right"]
+            pl_x = player.position.x
+            pl_y = player.position.y
             while dir:
                 player_dir = random.choice(dir)
                 dir.remove(player_dir)
@@ -267,48 +269,39 @@ def startGame(data: Map, init_pos):
                     player.move(player_dir)
                     break
 
-            room_map[player.position.x][player.position.y].Discover()
-            room_map[player.position.x][player.position.y].hideturtle()
+            room_map[pl_x][pl_y].Discover()
+            room_map[pl_x][pl_y].hideturtle()
 
-            room_item = data.map_data[player.position.x][player.position.y]
-            message = "Current pos: (" + str(data.map_size - player.position.x - 1) + ", " + str(
-                player.position.y) + ") - Found " + data.OBJECT_DICT[room_item]
+            room_item = data.map_data[pl_x][pl_y]
+            message = "Current pos: (" + str(data.map_size - pl_x - 1) + ", " + str(
+                pl_y) + ") - Found " + data.OBJECT_DICT[room_item]
             mes.writeMessage(message)
             # check player is dead or not
-            if room_item == "P":
+            if "P" in room_item:
                 print("Player fell into a pit!!")
                 player.destroy()
-                room_map[player.position.x][player.position.y].reveal_pit()
-                room_map[player.position.x][player.position.y].showturtle()
+                room_map[pl_x][pl_y].reveal_pit()
+                room_map[pl_x][pl_y].showturtle()
                 window.update()
                 time.sleep(2)
                 died = True
-                break
-            elif room_item in ["W","GW","BW","SW","BGW","BSW","BGSW"]:
+
+            elif "W" in room_item:
                 print("Player got eaten by the wumpus!!")
                 player.destroy()
-                room_map[player.position.x][player.position.y].reveal_wumpus()
-                room_map[player.position.x][player.position.y].showturtle()
+                room_map[pl_x][pl_y].reveal_wumpus()
+                room_map[pl_x][pl_y].showturtle()
                 window.update()
                 time.sleep(2)
                 died = True
-                break
-            elif room_item == "G":
+
+            elif "G" in room_item:
                 player.gold += GOLD
                 print("Player found gold!")
-                data.map_data[player.position.x][player.position.y] = "-"
-            elif room_item == "BG":
-                player.gold += GOLD
-                print("Player found gold!")
-                data.map_data[player.position.x][player.position.y] = "B"
-            elif room_item == "BGS":
-                player.gold += GOLD
-                print("Player found gold!")
-                data.map_data[player.position.x][player.position.y] = "BS"
-            elif room_item == "GS":
-                player.gold += GOLD
-                print("Player found gold!")
-                data.map_data[player.position.x][player.position.y] = "S"
+                data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G","")
+                data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
+            else:
+                pass
 
         elif next_action == "Shoot_arrow":
             dir = ["Up", "Down", "LEFT", "Right"]
