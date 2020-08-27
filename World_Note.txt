@@ -1,0 +1,12 @@
+- World limited 10x10
+- Room index theo trục tọa độ gốc (1,1)
+- Agent xuất hiện ngẫu nhiên và cổng ra cũng ở đấy.
+- P & G tùy ý, ít nhất 1 W
+- tên vô cực
+- Chết or (Kill hết W và ăn hết G) or OUT -> End game
+- Scoring: 
+	+ G +100
+	+ Shot -100
+	+ DIE -10000
+        + OUT +10
+        + Move room -10
