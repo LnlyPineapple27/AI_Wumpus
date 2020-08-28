@@ -3,6 +3,8 @@ from aima import utils
 import copy as cp
 from Point import Point
 
+FUNCTION = ["WUM({})", "PIT({})", "EXP({})"]
+
 
 class RoomCoordinate:
     def __init__(self, x=0, y=0):
@@ -47,7 +49,7 @@ def point_to_room(pnt: Point, size):
 
 
 class Room:
-    def __init__(self, pos:RoomCoordinate, sym:str):
+    def __init__(self, pos: RoomCoordinate, sym: str):
         self.position = pos
         self.sym = sym
         self.name = "R{}{}".format(self.position.x, self.position.y)
@@ -59,8 +61,9 @@ def init_KB():
     sen = ["(ADJ(x, y) & ADJ(x, z) & B(y) & B(z)) ==> PIT(x)",
            "(ADJ(x, y) & ADJ(x, z) & S(y) & S(z)) ==> WUM(x)",
            "(ADJ(x, y) & NULL(x)) ==> SAFE(y)",
-           "B(y) ==> SAFE(y)",
-           "S(y) ==> SAFE(y)"]
+           "B(x) ==> SAFE(x)",
+           "S(x) ==> SAFE(x)",
+           "NULL(x) ==> SAFE(x)"]
     # Create an array to hold clauses
     clauses = [utils.expr(s) for s in sen]
     # Create a first-order logic knowledge base (KB) with clauses
@@ -71,51 +74,106 @@ def in_map(size, pos):
     return 0 <= pos.x < size and 0 <= pos.y < size
 
 
-def think(world, KB, cur:Point):
+def KB_asking(KB, room):
+    wum = KB.ask(utils.expr("WUM{}".format(room)))
+    pit = KB.ask(utils.expr("PIT{}".format(room)))
+    safe = KB.ask(utils.expr("SAFE({})".format(room)))
+    expanded = KB.ask(utils.expr("EXP({})".format(room)))
+
+    return wum, pit, safe, expanded
+
+
+def think(world, KB, cur: Point):
     up = point_to_room(cur.up(), world.map_size).to_string() if in_map(world.map_size, cur.up()) else None
     down = point_to_room(cur.down(), world.map_size).to_string() if in_map(world.map_size, cur.down()) else None
     left = point_to_room(cur.left(), world.map_size).to_string() if in_map(world.map_size, cur.left()) else None
     right = point_to_room(cur.right(), world.map_size).to_string() if in_map(world.map_size, cur.right()) else None
-    dir = []
+    cur_room = point_to_room(cur, world.map_size).to_string()
+    act = []
+    safe_dict = {"Up": "NO", "Down": "NO", "Left": "NO", "Right": "NO"}
     if up:
-        cl = utils.expr("ADJ({}, {})".format(point_to_room(cur, world.map_size).to_string(), up))
-        if cl not in KB.clauses:
-            KB.tell(cl)
-        safe = KB.ask(utils.expr("SAFE({})".format(up)))
-        expanded = KB.ask(utils.expr("EXP({})".format(up)))
-        print("up, safe:", not not safe)
+        adj = utils.expr("ADJ({}, {})".format(cur_room, up))
+        if adj not in KB.clauses:
+            KB.tell(adj)
+
+        wum, pit, safe, expanded = KB_asking(KB, up)
+        if wum:
+            safe_dict["Up"] = "WUM"
+            KB.tell(utils.expr("WUM({})".format(up)))
+        elif pit:
+            safe_dict["Up"] = "PIT"
+            KB.tell(utils.expr("PIT({})".format(up)))
+        elif safe:
+            safe_dict["Up"] = "SAFE"
+            if not expanded:
+                act.append("Up")
         print("up, expanded:", not not expanded)
-        if safe and not expanded:
-            dir.append("Up")
+
     if down:
-        cl = utils.expr("ADJ({}, {})".format(point_to_room(cur, world.map_size).to_string(), down))
-        if cl not in KB.clauses:
-            KB.tell(cl)
-        safe = KB.ask(utils.expr("SAFE({})".format(down)))
-        expanded = KB.ask(utils.expr("EXP({})".format(down)))
+        adj = utils.expr("ADJ({}, {})".format(cur_room, down))
+        if adj not in KB.clauses:
+            KB.tell(adj)
+        wum, pit, safe, expanded = KB_asking(KB, down)
+        if wum:
+            safe_dict["Down"] = "WUM"
+            KB.tell(utils.expr("WUM({})".format(down)))
+        elif pit:
+            safe_dict["Down"] = "PIT"
+            KB.tell(utils.expr("PIT({})".format(down)))
+        elif safe:
+            safe_dict["Down"] = "SAFE"
+            if not expanded:
+                act.append("Down")
         print("down, safe:", not not safe)
         print("down, expanded:", not not expanded)
-        if safe and not expanded:
-            dir.append("Down")
+
     if left:
-        cl = utils.expr("ADJ({}, {})".format(point_to_room(cur, world.map_size).to_string(), left))
-        if cl not in KB.clauses:
-            KB.tell(cl)
-        safe = KB.ask(utils.expr("SAFE({})".format(left)))
-        expanded = KB.ask(utils.expr("EXP({})".format(left)))
-        print("left, safe:", not not safe)
+        adj = utils.expr("ADJ({}, {})".format(cur_room, left))
+        if adj not in KB.clauses:
+            KB.tell(adj)
+
+        wum, pit, safe, expanded = KB_asking(KB, left)
+        if wum:
+            safe_dict["Left"] = "WUM"
+            KB.tell(utils.expr("WUM({})".format(left)))
+        elif pit:
+            safe_dict["Left"] = "PIT"
+            KB.tell(utils.expr("PIT({})".format(left)))
+        elif safe:
+            safe_dict["Left"] = "SAFE"
+            if not expanded:
+                act.append("Left")
         print("left, expanded:", not not expanded)
-        if safe and not expanded:
-            dir.append("Left")
+
     if right:
-        cl = utils.expr("ADJ({}, {})".format(point_to_room(cur, world.map_size).to_string(), right))
-        if cl not in KB.clauses:
-            KB.tell(cl)
-        safe = KB.ask(utils.expr("SAFE({})".format(right)))
-        expanded = KB.ask(utils.expr("EXP({})".format(right)))
-        print("right, safe:", not not safe)
+        adj = utils.expr("ADJ({}, {})".format(cur_room, right))
+        if adj not in KB.clauses:
+            KB.tell(adj)
+        wum, pit, safe, expanded = KB_asking(KB, right)
+        if wum:
+            safe_dict["Right"] = "WUM"
+            KB.tell(utils.expr("WUM({})".format(right)))
+        elif pit:
+            safe_dict["Right"] = "PIT"
+            KB.tell(utils.expr("PIT({})".format(right)))
+        elif safe:
+            safe_dict["Right"] = "SAFE"
+            if not expanded:
+                act.append("Right")
         print("right, expanded:", not not expanded)
-        if safe and not expanded:
-            dir.append("Right")
-    print("dir",dir)
-    return dir
+
+    print("dir1", act)
+    print(safe_dict)
+    if not act:
+        print("dir2", act)
+        act = [item[0] for item in safe_dict.items() if item[1] == "SAFE"]
+    if not act:
+        if "B" in world.map_data[cur.x][cur.y]:
+            act = ["Go Home"]
+        else:
+            act = ["Shoot_arrow"]
+            dir = [item[0] for item in safe_dict.items() if item[1] == "WUM"]
+            act += dir
+            return act
+
+    return act

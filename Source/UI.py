@@ -131,6 +131,8 @@ class Room(turtle.Turtle):
         self.shape("..\\Images\\70\\PIT.gif")
         # self.showturtle()
         # self.forward(0)
+
+
 """
     def remove_stench(self):
         t_shape = self.shape()
@@ -139,6 +141,7 @@ class Room(turtle.Turtle):
         elif t_shape == "..\\Images\\70\\BREEZE_STENCH.gif":
             self.shape("..\\Images\\70\\BREEZE.gif")
 """
+
 
 class Player(turtle.Turtle):
     def __init__(self, init_pos: Point = None):
@@ -305,34 +308,26 @@ def startGame(data: Map, init_pos):
             if cl not in KB.clauses:
                 KB.tell(cl)
         if 'B' in room_item:
-            cls = [utils.expr("B({})".format(room_sym))]
-            pit = KB.ask(utils.expr("PIT({})".format(room_sym)))
-            if pit:
-                cls.append(utils.expr("PIT({})".format(room_sym)))
-            for cl in cls:
-                if cl not in KB.clauses:
-                    KB.tell(cl)
+            cl = utils.expr("B({})".format(room_sym))
+            if not cl in KB.clauses:
+                KB.tell(cl)
+
         if 'S' in room_item:
-            cls = [utils.expr("S({})".format(room_sym))]
-            wum = KB.ask(utils.expr("WUM({})".format(room_sym)))
-            if wum:
-                cls.append(utils.expr("WUM({})".format(room_sym)))
-            for cl in cls:
-                if cl not in KB.clauses:
-                    KB.tell(cl)
+            cl = utils.expr("S({})".format(room_sym))
+            if not cl in KB.clauses:
+                KB.tell(cl)
         cl = utils.expr("EXP({})".format(room_sym))
         if cl not in KB.clauses:
             KB.tell(cl)
         print(KB.clauses)
-        next_action = random.choice(["Move"])  # , "Shoot_arrow"
-
-        if next_action == "Move":
+        next_action = think(map, KB, player.position)
+        # , "Shoot_arrow"
+        print("From KB: ", next_action)
+        if "NOT SAFE" not in next_action:
             room_map[player.position.x][player.position.y].showturtle()
-
-            dir = think(map, KB, player.position)
-            while dir:
-                player_dir = random.choice(dir)
-                dir.remove(player_dir)
+            while next_action:
+                player_dir = random.choice(next_action)
+                next_action.remove(player_dir)
                 if data.is_valid_move(player.position, player_dir):
                     step += 1
                     player.score -= STEP_COST
@@ -378,9 +373,9 @@ def startGame(data: Map, init_pos):
                 pass
 
 
-        elif next_action == "Shoot_arrow":
-            dir = ["Up", "Down", "LEFT", "Right"]
-
+        elif "Shoot_arrow" in next_action:
+            next_action.remove("Shoot_arrow")
+            dir = next_action
             shoot_dir = random.choice(dir)
             if data.player_shoot(player.position, shoot_dir):
                 print("Player killed a wumpus in", shoot_dir, "room")
@@ -400,13 +395,13 @@ def startGame(data: Map, init_pos):
                 w_pos_right = w_pos.right()
                 # Up remove Stench ADJ rooms in UI after Wumpus is killed
                 if data.is_in_map(w_pos_up):
-                    room_map[w_pos_up.x][w_pos_up.y].Refresh(data.map_data[w_pos_up.x][w_pos_up.y],False)
+                    room_map[w_pos_up.x][w_pos_up.y].Refresh(data.map_data[w_pos_up.x][w_pos_up.y], False)
                 if data.is_in_map(w_pos_down):
-                    room_map[w_pos_down.x][w_pos_down.y].Refresh(data.map_data[w_pos_down.x][w_pos_down.y],False)
+                    room_map[w_pos_down.x][w_pos_down.y].Refresh(data.map_data[w_pos_down.x][w_pos_down.y], False)
                 if data.is_in_map(w_pos_left):
-                    room_map[w_pos_left.x][w_pos_left.y].Refresh(data.map_data[w_pos_left.x][w_pos_left.y],False)
+                    room_map[w_pos_left.x][w_pos_left.y].Refresh(data.map_data[w_pos_left.x][w_pos_left.y], False)
                 if data.is_in_map(w_pos_right):
-                    room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y],False)
+                    room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False)
             else:
                 print("Player wasted an arrow")
         else:

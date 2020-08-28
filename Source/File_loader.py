@@ -108,7 +108,7 @@ class Map:
 
     def remove_stench(self, room_pos):
         if self.is_in_map(room_pos):
-            if not have_wumpus_nearby(room_pos):
+            if not self.have_wumpus_nearby(room_pos):
                 room_item = self.map_data[room_pos.x][room_pos.y]
                 self.map_data[room_pos.x][room_pos.y] = room_item.replace('S', '')
                 self.map_data[room_pos.x][room_pos.y] += "-" if not self.map_data[room_pos.x][room_pos.y]else ""
