@@ -87,10 +87,16 @@ class Room(turtle.Turtle):
         self.goto(2000, 2000)
         self.hideturtle()
 
+    def Refresh(self, obj_type='-', explored=False):
+        self.obj_type = obj_type
+        self.explored = explored
+        self.Discover()
+
     def Discover(self):
         if self.explored:
             return
         else:
+            self.explored = True
             if self.obj_type == '-':
                 self.shape("..\\Images\\70\\EMPTY.gif")
             elif self.obj_type == 'B' or self.obj_type == 'BW':
@@ -125,7 +131,14 @@ class Room(turtle.Turtle):
         self.shape("..\\Images\\70\\PIT.gif")
         # self.showturtle()
         # self.forward(0)
-
+"""
+    def remove_stench(self):
+        t_shape = self.shape()
+        if t_shape == "..\\Images\\70\\STENCH.gif":
+            self.shape("..\\Images\\70\\EMPTY.gif")
+        elif t_shape == "..\\Images\\70\\BREEZE_STENCH.gif":
+            self.shape("..\\Images\\70\\BREEZE.gif")
+"""
 
 class Player(turtle.Turtle):
     def __init__(self, init_pos: Point = None):
@@ -193,14 +206,6 @@ class Player(turtle.Turtle):
         self.goto(2000, 2000)
         self.hideturtle()
 
-    """
-    def check_status(self, other: Room):
-        if other.obj_type != 'W' and other.obj_type != 'P':
-            return False
-        else:
-            return (self.xcor() == other.xcor()) and (self.ycor() == other.ycor())
-    """
-
 
 # Global variable
 player = Player()
@@ -226,13 +231,6 @@ def setup_map(board, init_index):
             screen_y = val_y - (i * PIXEL_SIZE)
 
             row_map.append(Room(screen_x, screen_y, item, False))
-            """
-            if item == "P":
-                pit_location_list.append(Point(i,j))
-            elif item == "W":
-                wumpus_location_list.append(Point(i,j))
-            """
-
         room_map.append(row_map)
     # print Player according to its given location
     room_map[player.position.x][player.position.y].Discover()
@@ -294,6 +292,7 @@ def startGame(data: Map, init_pos):
         print("Player found gold!")
         data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G", "")
         data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
+        room_map[pl_x][pl_y].obj_type = data.map_data[pl_x][pl_y]
     while not died and not quit:
         # Time delay
         time.sleep(DELAY_TIME)
@@ -374,6 +373,7 @@ def startGame(data: Map, init_pos):
                 print("Player found gold!")
                 data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G", "")
                 data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
+                room_map[pl_x][pl_y].obj_type = data.map_data[pl_x][pl_y]
             else:
                 pass
 
@@ -383,7 +383,30 @@ def startGame(data: Map, init_pos):
 
             shoot_dir = random.choice(dir)
             if data.player_shoot(player.position, shoot_dir):
-                print("Player killed a wumpus in this room")
+                print("Player killed a wumpus in", shoot_dir, "room")
+                w_pos = player.position
+                if shoot_dir == "Up":
+                    w_pos = w_pos.up()
+                elif shoot_dir == "Down":
+                    w_pos = w_pos.down()
+                elif shoot_dir == "Left":
+                    w_pos = w_pos.left()
+                elif shoot_dir == "Right":
+                    w_pos = w_pos.right()
+
+                w_pos_up = w_pos.up()
+                w_pos_down = w_pos.down()
+                w_pos_left = w_pos.left()
+                w_pos_right = w_pos.right()
+                # Up remove Stench ADJ rooms in UI after Wumpus is killed
+                if data.is_in_map(w_pos_up):
+                    room_map[w_pos_up.x][w_pos_up.y].Refresh(data.map_data[w_pos_up.x][w_pos_up.y],False)
+                if data.is_in_map(w_pos_down):
+                    room_map[w_pos_down.x][w_pos_down.y].Refresh(data.map_data[w_pos_down.x][w_pos_down.y],False)
+                if data.is_in_map(w_pos_left):
+                    room_map[w_pos_left.x][w_pos_left.y].Refresh(data.map_data[w_pos_left.x][w_pos_left.y],False)
+                if data.is_in_map(w_pos_right):
+                    room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y],False)
             else:
                 print("Player wasted an arrow")
         else:

@@ -34,8 +34,7 @@ OBJECT_DICT = {"A": "Agent",
                "BSW": "Breeze_Stench_Wumpus",
                "BGW":"Breeze_Gold_Wumpus",
                "GSW": "Gold_Stench_Wumpus",
-               "BGSW": "Breeze_Gold_Stench_Wumpus"
-               }
+               "BGSW": "Breeze_Gold_Stench_Wumpus"}
 DEFAULT_NUM = {"W": 3,
                "P": 3,
                "G": 10,
@@ -88,10 +87,44 @@ class Map:
         else:
             return False
 
+    def have_wumpus(self, room_pos: Point):
+        if not self.is_in_map(room_pos):
+            return False
+        elif "W" in self.map_data[room_pos.x][room_pos.y]:
+            return True
+        else:
+            return False
+
+    def have_wumpus_nearby(self, room_pos: Point):
+        if self.have_wumpus(room_pos.up()):
+            return True
+        if self.have_wumpus(room_pos.down()):
+            return True
+        if self.have_wumpus(room_pos.left()):
+            return True
+        if self.have_wumpus(room_pos.right()):
+            return True
+        return False
+
+    def remove_stench(self, room_pos):
+        if self.is_in_map(room_pos):
+            if not have_wumpus_nearby(room_pos):
+                room_item = self.map_data[room_pos.x][room_pos.y]
+                self.map_data[room_pos.x][room_pos.y] = room_item.replace('S', '')
+                self.map_data[room_pos.x][room_pos.y] += "-" if not self.map_data[room_pos.x][room_pos.y]else ""
+
+    def remove_stench_after_wumpus_is_killed(self, wumpus_pos: Point):
+        self.remove_stench(wumpus_pos.up())
+        self.remove_stench(wumpus_pos.down())
+        self.remove_stench(wumpus_pos.right())
+        self.remove_stench(wumpus_pos.left())
+
     def wumpus_got_killed(self, wumpus_pos: Point):
         room_item = self.map_data[wumpus_pos.x][wumpus_pos.y]
         if "W" in room_item:
             self.map_data[wumpus_pos.x][wumpus_pos.y] = room_item.replace('W', '')
+            self.map_data[wumpus_pos.x][wumpus_pos.y] += "-" if not self.map_data[wumpus_pos.x][wumpus_pos.y]else ""
+            self.remove_stench_after_wumpus_is_killed(wumpus_pos)
             return True
         else:
             return False
