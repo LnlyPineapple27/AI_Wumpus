@@ -10,7 +10,7 @@ val_y = 270
 PIXEL_SIZE = 70
 width = 1000
 height = 820
-DELAY_TIME = 0.7
+DELAY_TIME = 0.2
 style = ('Courier', 20, 'italic')
 # --------------------------------------COST FOR SCORING---------------------------
 GOLD = 100
@@ -155,7 +155,7 @@ class Player(turtle.Turtle):
         self.gold_found = 0
 
     def go_up(self):
-        # print("Player go up")
+        print("Player go up")
         move_to_x = self.xcor()
         move_to_y = self.ycor() + PIXEL_SIZE
         self.shape("..\\Images\\70\\UP.gif")
@@ -164,7 +164,7 @@ class Player(turtle.Turtle):
         self.position.x -= 1
 
     def go_down(self):
-        # print("Player go down")
+        print("Player go down")
         move_to_x = self.xcor()
         move_to_y = self.ycor() - PIXEL_SIZE
         self.shape("..\\Images\\70\\DOWN.gif")
@@ -173,7 +173,7 @@ class Player(turtle.Turtle):
         self.position.x += 1
 
     def go_left(self):
-        # print("Player go left")
+        print("Player go left")
         move_to_x = self.xcor() - PIXEL_SIZE
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\LEFT.gif")
@@ -182,7 +182,7 @@ class Player(turtle.Turtle):
         self.position.y -= 1
 
     def go_right(self):
-        # print("Player go right")
+        print("Player go right")
         move_to_x = self.xcor() + PIXEL_SIZE
         move_to_y = self.ycor()
         self.shape("..\\Images\\70\\RIGHT.gif")
@@ -319,6 +319,7 @@ def startGame(data: Map, init_pos):
         cl = utils.expr("EXP({})".format(room_sym))
         if cl not in KB.clauses:
             KB.tell(cl)
+        print("at",room_sym)
         print(KB.clauses)
         next_action = think(map, KB, player.position)
         # , "Shoot_arrow"

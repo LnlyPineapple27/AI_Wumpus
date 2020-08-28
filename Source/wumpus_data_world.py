@@ -58,8 +58,8 @@ class Room:
 def init_KB():
     # Init
     # ADJ kề
-    sen = ["(ADJ(x, y) & ADJ(x, z) & B(y) & B(z)) ==> PIT(x)",
-           "(ADJ(x, y) & ADJ(x, z) & S(y) & S(z)) ==> WUM(x)",
+    sen = ["(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & B(y) & B(z) & B(t)) ==> PIT(x)",
+           "(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & S(y) & S(z) & B(t)) ==> WUM(x)",
            "(ADJ(x, y) & NULL(x)) ==> SAFE(y)",
            "B(x) ==> SAFE(x)",
            "S(x) ==> SAFE(x)",
@@ -75,10 +75,11 @@ def in_map(size, pos):
 
 
 def KB_asking(KB, room):
+    print(room)
     wum = KB.ask(utils.expr("WUM{}".format(room)))
     pit = KB.ask(utils.expr("PIT{}".format(room)))
     safe = KB.ask(utils.expr("SAFE({})".format(room)))
-    expanded = KB.ask(utils.expr("EXP({})".format(room)))
+    expanded = utils.expr("EXP({})".format(room)) in KB.clauses
 
     return wum, pit, safe, expanded
 
