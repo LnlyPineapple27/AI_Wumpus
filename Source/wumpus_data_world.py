@@ -58,8 +58,8 @@ class Room:
 def init_KB():
     # Init
     # ADJ kề
-    sen = ["(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & B(y) & B(z) & B(t)) ==> PIT(x)",
-           "(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & S(y) & S(z) & B(t)) ==> WUM(x)",
+    sen = ["(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & ADJ(x, v) & B(y) & B(z) & B(t) & B(v)) ==> PIT(x)",
+           "(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & ADJ(x, t) & S(y) & S(z) & S(t) & S(v)) ==> WUM(x)",
            "(ADJ(x, y) & NULL(x)) ==> SAFE(y)",
            "B(x) ==> SAFE(x)",
            "S(x) ==> SAFE(x)",

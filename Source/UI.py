@@ -420,7 +420,7 @@ def startGame(data: Map, init_pos):
 if __name__ == "__main__":
     input_list = Input()
     input_list.items()
-    map = input_list.get_map("10x10_10G_3W_3P.txt")
+    map = input_list.get_map("6x6_10G_1W_1P.txt")
     # map.print_entities()
     init_pos = map.random_spawning_location()
     # messagebox.showinfo("UI will started!!","Click ok to start!!!")

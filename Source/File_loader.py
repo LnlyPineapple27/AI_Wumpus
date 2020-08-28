@@ -35,10 +35,10 @@ OBJECT_DICT = {"A": "Agent",
                "BGW":"Breeze_Gold_Wumpus",
                "GSW": "Gold_Stench_Wumpus",
                "BGSW": "Breeze_Gold_Stench_Wumpus"}
-DEFAULT_NUM = {"W": 3,
-               "P": 3,
+DEFAULT_NUM = {"W": 1,
+               "P": 1,
                "G": 10,
-               "Size": 10}
+               "Size": 6}
 SYM = ["A", "W", "P"]
 SIG = ["B", "S", "G", "-"]
 
