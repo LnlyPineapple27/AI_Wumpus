@@ -18,6 +18,7 @@ ARROW_COST = 100
 DEATH_COST = 10000
 STEP_COST = 10
 EXIT_MAP = 10
+MAX_STAMINA = 100*STEP_COST
 # --------------------------------------------Initial things-----------------------------
 window = turtle.Screen()
 root = turtle.Screen()._root
@@ -166,6 +167,7 @@ class Player(turtle.Turtle):
         self.speed(0)
         self.score = 0
         self.gold_found = 0
+        self.stamina = MAX_STAMINA
 
     def go_up(self):
         print("Player go up")
@@ -263,7 +265,7 @@ def endGame():
 
 def startGame(data: Map, init_pos: Point):
     step = 1
-    setup_map(data.map_data, init_pos)
+    setup_map(data.map_data, init_pos.clone())
     """
     turtle.listen()
     turtle.onkey(player.go_up, 'Up')
@@ -274,6 +276,7 @@ def startGame(data: Map, init_pos: Point):
     died = False
     quit = False
     path_map = [[False] * data.map_size for _ in range(data.map_size)]
+
     pl_x = player.position.x
     pl_y = player.position.y
     room_map[pl_x][pl_y].hideturtle()
@@ -312,7 +315,7 @@ def startGame(data: Map, init_pos: Point):
         room_map[pl_x][pl_y].obj_type = data.map_data[pl_x][pl_y]
 
     # ---------------------------------game loop -----------------------------------
-    while not died and not quit:
+    while not died and not quit and player.stamina > 0:
         # Time delay
         time.sleep(DELAY_TIME)
         # print(KB.clauses)
@@ -348,6 +351,7 @@ def startGame(data: Map, init_pos: Point):
                 if data.is_valid_move(player.position, player_dir):
                     step += 1
                     player.score -= STEP_COST
+                    player.stamina -= STEP_COST
                     player.move(player_dir)
                     break
 
@@ -383,6 +387,7 @@ def startGame(data: Map, init_pos: Point):
             elif "G" in room_item:
                 player.score += GOLD
                 player.gold_found += 1
+                player.stamina = MAX_STAMINA
                 print("Player found gold!")
                 data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G", "")
                 data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
@@ -427,20 +432,27 @@ def startGame(data: Map, init_pos: Point):
         window.update()
 
     #Escape to initial pos to exit game
+    #print(path_map)
+    #time.sleep(20)
     path_list = BFS(path_map, player.position, init_pos)
     guide_list = dir_from_path(path_list)
     room_map[init_pos.x][init_pos.y].Refresh("ESC", False)
+    window.update()
+    if not guide_list:
+        print("Luckily, the player is already at exit pos", player.position.coordinate(), init_pos.coordinate())
+    else:
+        while guide_list:
+            step += 1
+            time.sleep(DELAY_TIME)
+            room_map[player.position.x][player.position.y].showturtle()
+            player.move(guide_list.pop(0))
+            room_map[player.position.x][player.position.y].hideturtle()
+            room_map[player.position.x][player.position.y].Discover()
+            mes.tracePathMessage(str(point_to_room(player.position, data.map_size).coordinate()),str(point_to_room(init_pos, data.map_size).coordinate()), step)
 
-    while guide_list:
-        step += 1
-        room_map[player.position.x][player.position.y].showturtle()
-        player.move(guide_list.pop(0))
-        room_map[player.position.x][player.position.y].hideturtle()
-        room_map[player.position.x][player.position.y].Discover()
-        mes.tracePathMessage(str(point_to_room(player.position, data.map_size).coordinate()),str(point_to_room(init_pos, data.map_size).coordinate()), step)
+            window.update()
 
-        window.update()
-
+        time.sleep(3)
 
 
     print("END game:")

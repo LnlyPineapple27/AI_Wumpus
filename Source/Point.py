@@ -46,3 +46,6 @@ class Point:
         cp_pnt = cp.deepcopy(self)
         cp_pnt.y += 1
         return cp_pnt
+
+    def clone(self):
+        return cp.deepcopy(self)

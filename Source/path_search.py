@@ -94,17 +94,17 @@ def dir_from_path(path):
         return res
 
 if __name__ == "__main__":
-    mat = [[1, 0, 1, 1, 1, 1, 0, 1, 1, 1],
-            [1, 0, 1, 0, 1, 1, 1, 0, 1, 1],
-            [1, 1, 1, 0, 1, 1, 0, 1, 0, 1],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-            [1, 1, 1, 0, 1, 1, 1, 0, 1, 0],
-            [1, 0, 1, 1, 1, 1, 0, 1, 0, 0],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 1, 1, 1, 0, 1, 1, 1],
-            [1, 1, 0, 0, 0, 0, 1, 0, 0, 1]]
+    mat = [[True, False, True, True, True, True, False, True, True, True],
+            [True, False, True, False, True, True, True, False, True, True],
+            [True, True, True, False, True, True, False, True, False, True],
+            [False, False, False, False, True, False, False, False, False, True],
+            [True, True, True, False, True, True, True, False, True, False],
+            [True, False, True, True, True, True, False, True, False, False],
+            [True, False, False, False, False, False, False, False, False, True],
+            [True, False, True, True, True, True, False, True, True, True],
+            [True, True, False, False, False, False, True, False, False, True]]
     Source = Point(0, 0)
-    Destination = Point(3, 4);
+    Destination = Point(0, 0);
 
     path = BFS(mat, Source, Destination)
     for i in path:
