@@ -350,14 +350,15 @@ def startGame(data: Map, init_pos: Point):
         print("From KB: ", next_action)
         if "Move" in next_action:
             next_action.remove("Move")
-            room_map[player.position.x][player.position.y].showturtle()
             while next_action:
                 player_dir = next_action.pop(0)
                 if data.is_valid_move(player.position, player_dir):
+                    room_map[player.position.x][player.position.y].showturtle()
                     step += 1
                     player.score -= STEP_COST
                     player.stamina -= STEP_COST
                     player.move(player_dir)
+
                 pl_x = player.position.x
                 pl_y = player.position.y
                 room_map[pl_x][pl_y].hideturtle()
@@ -377,6 +378,7 @@ def startGame(data: Map, init_pos: Point):
                     window.update()
                     time.sleep(2)
                     died = True
+                    break
 
                 elif "W" in room_item:
                     print("Player got eaten by the wumpus!!")
@@ -386,6 +388,7 @@ def startGame(data: Map, init_pos: Point):
                     window.update()
                     time.sleep(2)
                     died = True
+                    break
 
                 elif "G" in room_item:
                     player.score += GOLD
