@@ -170,7 +170,7 @@ def think(world, KB, cur: Point):
         act = [item[0] for item in safe_dict.items() if item[1] == "SAFE"]
     if not act:
         if "B" in world.map_data[cur.x][cur.y]:
-            act = ["Go Home"]
+            act = ["Go_Home"]
         else:
             act = ["Shoot_arrow"]
             dir = [item[0] for item in safe_dict.items() if item[1] == "WUM"]
@@ -178,3 +178,4 @@ def think(world, KB, cur: Point):
             return act
 
     return act
+

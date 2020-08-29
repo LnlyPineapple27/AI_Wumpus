@@ -3,7 +3,7 @@ import time
 from File_loader import *
 import sys
 from wumpus_data_world import *
-
+from path_search import BFS, dir_from_path
 # ---------------------------------Front-end stuff------------------------
 val_x = 300
 val_y = 270
@@ -41,7 +41,8 @@ images = ["..\\Images\\70\\DOWN.gif",
           "..\\Images\\70\\PIT.gif",
           "..\\Images\\70\\EMPTY.gif",
           "..\\Images\\70\\STENCH.gif",
-          "..\\Images\\70\\UNKNOWN.gif"]
+          "..\\Images\\70\\UNKNOWN.gif",
+          "..\\Images\\70\\ESCAPE.gif"]
 KB = init_KB()
 
 for img in images:
@@ -64,11 +65,21 @@ class ScreenMessage(turtle.Turtle):
     def writeMessage(self, message: str = "", score: int = -1, step: int = 0, gold_found: int = 0):
         self.clear()
         self.goto((-1) * width / 3, height / 3 + 90)
-        self.write(message, font=style, align='left')
+        self.write("Current pos: " + message, font=style, align='left')
         self.goto((-1) * width / 3, height / 3 + 60)
         self.write("Score: " + str(score) + "\t\tGold found: " + str(gold_found), font=style, align='left')
         self.goto((-1) * width / 3, height / 3 + 30)
-        self.write("Step: " + str(step), font=style, align='left')
+        self.write("Steps: " + str(step), font=style, align='left')
+        self.hideturtle()
+
+    def tracePathMessage(self, cur_pos:str, goal_pos:str, step: int):
+        self.clear()
+        self.goto((-1) * width / 3, height / 3 + 90)
+        self.write("Player is tracing back to initial pos at "+ goal_pos, font=style, align='left')
+        self.goto((-1) * width / 3, height / 3 + 60)
+        self.write("Current pos: " + cur_pos, font=style, align='left')
+        self.goto((-1) * width / 3, height / 3 + 30)
+        self.write("Steps: " + str(step), font=style, align='left')
         self.hideturtle()
 
 
@@ -121,6 +132,8 @@ class Room(turtle.Turtle):
                 # self.shape("..\\Images\\70\\GOLD.gif")
             elif self.obj_type == 'P':
                 self.shape("..\\Images\\70\\PIT.gif")
+            elif self.obj_type == 'ESC':
+                self.shape("..\\Images\\70\\ESCAPE.gif")
 
     def reveal_wumpus(self):
         self.shape("..\\Images\\70\\WUMPUS.gif")
@@ -248,7 +261,7 @@ def endGame():
     sys.exit()
 
 
-def startGame(data: Map, init_pos):
+def startGame(data: Map, init_pos: Point):
     step = 1
     setup_map(data.map_data, init_pos)
     """
@@ -260,16 +273,17 @@ def startGame(data: Map, init_pos):
     """
     died = False
     quit = False
-
+    path_map = [[False] * data.map_size for _ in range(data.map_size)]
     pl_x = player.position.x
     pl_y = player.position.y
     room_map[pl_x][pl_y].hideturtle()
     room_map[pl_x][pl_y].Discover()
+    path_map[pl_x][pl_y] = True
     room_item = data.map_data[pl_x][pl_y]
-    message = "Current pos: " + str(point_to_room(player.position, data.map_size).coordinate()) + "\tFound " + \
+    message = str(point_to_room(player.position, data.map_size).coordinate()) + "\tFound " + \
               data.OBJECT_DICT[room_item]
     mes.writeMessage(message, player.score, step, player.gold_found)
-    # check player is dead or not
+    # init pos check
 
     if "P" in room_item:
         print("Player fell into a pit!!")
@@ -296,6 +310,8 @@ def startGame(data: Map, init_pos):
         data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G", "")
         data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
         room_map[pl_x][pl_y].obj_type = data.map_data[pl_x][pl_y]
+
+    # ---------------------------------game loop -----------------------------------
     while not died and not quit:
         # Time delay
         time.sleep(DELAY_TIME)
@@ -339,8 +355,9 @@ def startGame(data: Map, init_pos):
             pl_y = player.position.y
             room_map[pl_x][pl_y].hideturtle()
             room_map[pl_x][pl_y].Discover()
+            path_map[pl_x][pl_y] = True
             room_item = data.map_data[pl_x][pl_y]
-            message = "Current pos: " + str(point_to_room(player.position, data.map_size).coordinate()) + "\tFound " + \
+            message = str(point_to_room(player.position, data.map_size).coordinate()) + "\tFound " + \
                       data.OBJECT_DICT[room_item]
             mes.writeMessage(message, player.score, step, player.gold_found)
             # check player is dead or not
@@ -405,12 +422,26 @@ def startGame(data: Map, init_pos):
                     room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False)
             else:
                 print("Player wasted an arrow")
-        else:
-            pass
+        elif "Go_Home" in next_action:
+            died = True
+        window.update()
+
+    #Escape to initial pos to exit game
+    path_list = BFS(path_map, player.position, init_pos)
+    guide_list = dir_from_path(path_list)
+    room_map[init_pos.x][init_pos.y].Refresh("ESC", False)
+
+    while guide_list:
+        step += 1
+        room_map[player.position.x][player.position.y].showturtle()
+        player.move(guide_list.pop(0))
+        room_map[player.position.x][player.position.y].hideturtle()
+        room_map[player.position.x][player.position.y].Discover()
+        mes.tracePathMessage(str(point_to_room(player.position, data.map_size).coordinate()),str(point_to_room(init_pos, data.map_size).coordinate()), step)
 
         window.update()
-        # nếu ăn vàng thì mất vàng treen map
-        # va chạm = cách so sánh pos pLayer và pos room, xét loại room rồi đánh giá died hay thêm vàng
+
+
 
     print("END game:")
     # turtle.exitonclick()

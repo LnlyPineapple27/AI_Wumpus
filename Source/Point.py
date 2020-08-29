@@ -11,6 +11,9 @@ class Point:
     def __eq__(self, another):
         return self.x == another.x and self.y == another.y
 
+    def __str__(self):
+        return str((self.x, self.y))
+
     def rand(self, sos):
         self.x = randint(0, sos)
         self.y = randint(0, sos)
