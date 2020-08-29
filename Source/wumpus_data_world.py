@@ -1,8 +1,7 @@
 from aima import logic
 from aima import utils
 import copy as cp
-from Point import Point
-
+from path_search import *
 FUNCTION = ["WUM({})", "PIT({})", "EXP({})"]
 
 
@@ -82,9 +81,30 @@ def KB_asking(KB, room):
     wum = KB.ask(utils.expr("WUM{}".format(room)))
     pit = KB.ask(utils.expr("PIT{}".format(room)))
     safe = KB.ask(utils.expr("SAFE({})".format(room)))
-    expanded = utils.expr("EXP({})".format(room)) in KB.clauses
 
-    return wum, pit, safe, expanded
+    return wum, pit, safe
+
+
+def find_safe(world, KB):
+    safe_list = []
+    b_list = []
+    for i in range(world.map_size):
+        for j in range(world.map_size):
+            p = Point(i, j)
+            room = point_to_room(size=world.map_size, pnt=p).to_string()
+            cl1 = utils.expr("SAFE({})".format(room))
+            cl2 = utils.expr("EXP({})".format(room))
+            safe = KB.ask(cl1)
+            expanded = cl2 in KB.clauses
+            if safe and not expanded:
+                safe_list.append(p)
+
+            cl3 = utils.expr("B({})".format(room))
+            b = cl3 in KB.clauses
+            if b:
+                b_list.append(p)
+
+    return safe_list, b_list
 
 
 def KB_tell_corner_edge(KB, size, pnt):
@@ -101,114 +121,65 @@ def KB_tell_corner_edge(KB, size, pnt):
             KB.tell(fact)
 
 
-def think(world, KB, cur: Point):
-    up, down, left, right = cur.adj()
-    cur_room = point_to_room(cur, world.map_size).to_string()
-    act = []
-    safe_dict = {"Up": "NO", "Down": "NO", "Left": "NO", "Right": "NO"}
-    if in_map(world.map_size, up):
+def KB_tell_WUM_PIT_ADJ_SAFE(KB, size, pnt, cur_room):
+    if in_map(size, pnt):
         # Check corner or edge
-        KB_tell_corner_edge(KB, world.map_size, up)
+        KB_tell_corner_edge(KB, size, pnt)
         # Add Adjacent fact
-        up = point_to_room(up, world.map_size).to_string()
-        adj = utils.expr("ADJ({}, {})".format(cur_room, up))
+        room = point_to_room(pnt, size).to_string()
+        adj = utils.expr("ADJ({}, {})".format(cur_room, room))
         if adj not in KB.clauses:
             KB.tell(adj)
-        wum, pit, safe, expanded = KB_asking(KB, up)
+        wum, pit, safe = KB_asking(KB, room)
+        print("Safe", not not safe)
         if wum:
-            safe_dict["Up"] = "WUM"
-            KB.tell(utils.expr("WUM({})".format(up)))
-        elif pit:
-            safe_dict["Up"] = "PIT"
-            KB.tell(utils.expr("PIT({})".format(up)))
-        elif safe:
-            safe_dict["Up"] = "SAFE"
-            if not expanded:
-                act.append("Up")
-        print("up, expanded:", not not expanded)
+            cl = utils.expr("WUM({})".format(room))
+            if cl not in KB.clauses:
+                KB.tell(cl)
+        if pit:
+            cl = utils.expr("PIT({})".format(room))
+            if cl not in KB.clauses:
+                KB.tell(cl)
+        if safe:
+            cl = utils.expr("SAFE({})".format(room))
+            if cl not in KB.clauses:
+                KB.tell(cl)
 
-    if in_map(world.map_size, down):
 
-        KB_tell_corner_edge(KB, world.map_size, down)
+def update_KB(KB, size, pnt):
+    up, down, left, right = pnt.adj()
+    room = point_to_room(pnt, size).to_string()
+    KB_tell_WUM_PIT_ADJ_SAFE(KB, size, up, room)
+    KB_tell_WUM_PIT_ADJ_SAFE(KB, size, down, room)
+    KB_tell_WUM_PIT_ADJ_SAFE(KB, size, left, room)
+    KB_tell_WUM_PIT_ADJ_SAFE(KB, size, right, room)
 
-        down = point_to_room(down, world.map_size).to_string()
-        adj = utils.expr("ADJ({}, {})".format(cur_room, down))
-        if adj not in KB.clauses:
-            KB.tell(adj)
-        wum, pit, safe, expanded = KB_asking(KB, down)
-        if wum:
-            safe_dict["Down"] = "WUM"
-            KB.tell(utils.expr("WUM({})".format(down)))
-        elif pit:
-            safe_dict["Down"] = "PIT"
-            KB.tell(utils.expr("PIT({})".format(down)))
-        elif safe:
-            safe_dict["Down"] = "SAFE"
-            if not expanded:
-                act.append("Down")
-        print("down, safe:", not not safe)
-        print("down, expanded:", not not expanded)
 
-    if in_map(world.map_size, left):
-        KB_tell_corner_edge(KB, world.map_size, left)
+def think(world, KB, cur: Point, map):
 
-        left = point_to_room(left, world.map_size).to_string()
-        adj = utils.expr("ADJ({}, {})".format(cur_room, left))
-        if adj not in KB.clauses:
-            KB.tell(adj)
+    update_KB(KB, world.map_size, cur)
+    print("KB",KB.clauses)
+    sl, bl = find_safe(world, KB)
 
-        wum, pit, safe, expanded = KB_asking(KB, left)
-        if wum:
-            safe_dict["Left"] = "WUM"
-            KB.tell(utils.expr("WUM({})".format(left)))
-        elif pit:
-            safe_dict["Left"] = "PIT"
-            KB.tell(utils.expr("PIT({})".format(left)))
-        elif safe:
-            safe_dict["Left"] = "SAFE"
-            if not expanded:
-                act.append("Left")
-        print("left, expanded:", not not expanded)
+    if not sl and not bl:
+        act = ["Go_Home"]
+    elif sl:
+        print("found safe")
+        print(sl)
+        for p in sl:
+            map[p.x][p.y] = True
+        act = ["Move"]
+        goal = sl.pop()
+        dir = dir_from_path(BFS(map, cur, goal))
+        act += dir
+    else:
+        print("found B")
+        for p in bl:
+            map[p.x][p.y] = True
+        act = ["Go_Home"]
+        goal = bl.pop()
+        dir = dir_from_path(BFS(map, cur, goal))
+        act += dir
 
-    if in_map(world.map_size, right):
-        KB_tell_corner_edge(KB, world.map_size, right)
-
-        right = point_to_room(right, world.map_size).to_string()
-        adj = utils.expr("ADJ({}, {})".format(cur_room, right))
-        if adj not in KB.clauses:
-            KB.tell(adj)
-        wum, pit, safe, expanded = KB_asking(KB, right)
-        if wum:
-            safe_dict["Right"] = "WUM"
-            KB.tell(utils.expr("WUM({})".format(right)))
-        elif pit:
-            safe_dict["Right"] = "PIT"
-            KB.tell(utils.expr("PIT({})".format(right)))
-        elif safe:
-            safe_dict["Right"] = "SAFE"
-            if not expanded:
-                act.append("Right")
-        print("right, expanded:", not not expanded)
-
-    print("dir1", act)
-    print(safe_dict)
-    if act:
-        act.append("Move")
-    if not act:
-        print("dir2", act)
-        act = [item[0] for item in safe_dict.items() if item[1] == "SAFE"]
-        if act:
-            act.append("Move")
-    if not act:
-        if "B" in world.map_data[cur.x][cur.y]:
-            act = ["Go_Home"]
-        else:
-            act = ["Shoot_arrow"]
-            dir = [item[0] for item in safe_dict.items() if item[1] == "WUM"]
-            if not dir:
-                dir = ["Up", "Down", "Left", "Right"]
-            act += dir
-
-    print(act)
     return act
 

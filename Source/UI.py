@@ -343,62 +343,62 @@ def startGame(data: Map, init_pos: Point):
         cl = utils.expr("EXP({})".format(room_sym))
         if cl not in KB.clauses:
             KB.tell(cl)
-        print("at",room_sym)
+        print("at",room_sym, "found",room_item)
         print(KB.clauses)
-        next_action = think(map, KB, player.position)
+        next_action = think(map, KB, player.position, path_map)
         # , "Shoot_arrow"
         print("From KB: ", next_action)
         if "Move" in next_action:
             next_action.remove("Move")
             room_map[player.position.x][player.position.y].showturtle()
             while next_action:
-                player_dir = random.choice(next_action)
-                next_action.remove(player_dir)
+                player_dir = next_action.pop(0)
                 if data.is_valid_move(player.position, player_dir):
                     step += 1
                     player.score -= STEP_COST
                     player.stamina -= STEP_COST
                     player.move(player_dir)
-                    break
-
-            pl_x = player.position.x
-            pl_y = player.position.y
-            room_map[pl_x][pl_y].hideturtle()
-            room_map[pl_x][pl_y].Discover()
-            path_map[pl_x][pl_y] = True
-            room_item = data.map_data[pl_x][pl_y]
-            message = str(point_to_room(player.position, data.map_size).coordinate()) + "\tFound " + \
-                      data.OBJECT_DICT[room_item]
-            mes.writeMessage(message, player.score, step, player.gold_found)
-            # check player is dead or not
-            if "P" in room_item:
-                print("Player fell into a pit!!")
-                player.destroy()
-                room_map[pl_x][pl_y].reveal_pit()
-                room_map[pl_x][pl_y].showturtle()
+                pl_x = player.position.x
+                pl_y = player.position.y
+                room_map[pl_x][pl_y].hideturtle()
+                room_map[pl_x][pl_y].Discover()
                 window.update()
-                time.sleep(2)
-                died = True
+                path_map[pl_x][pl_y] = True
+                room_item = data.map_data[pl_x][pl_y]
+                message = str(point_to_room(player.position, data.map_size).coordinate()) + "\tFound " + \
+                          data.OBJECT_DICT[room_item]
+                mes.writeMessage(message, player.score, step, player.gold_found)
+                # check player is dead or not
+                if "P" in room_item:
+                    print("Player fell into a pit!!")
+                    player.destroy()
+                    room_map[pl_x][pl_y].reveal_pit()
+                    room_map[pl_x][pl_y].showturtle()
+                    window.update()
+                    time.sleep(2)
+                    died = True
 
-            elif "W" in room_item:
-                print("Player got eaten by the wumpus!!")
-                player.destroy()
-                room_map[pl_x][pl_y].reveal_wumpus()
-                room_map[pl_x][pl_y].showturtle()
+                elif "W" in room_item:
+                    print("Player got eaten by the wumpus!!")
+                    player.destroy()
+                    room_map[pl_x][pl_y].reveal_wumpus()
+                    room_map[pl_x][pl_y].showturtle()
+                    window.update()
+                    time.sleep(2)
+                    died = True
+
+                elif "G" in room_item:
+                    player.score += GOLD
+                    player.gold_found += 1
+                    player.stamina = MAX_STAMINA
+                    print("Player found gold!")
+                    data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G", "")
+                    data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
+                    room_map[pl_x][pl_y].obj_type = data.map_data[pl_x][pl_y]
+                else:
+                    pass
+                time.sleep(DELAY_TIME)
                 window.update()
-                time.sleep(2)
-                died = True
-
-            elif "G" in room_item:
-                player.score += GOLD
-                player.gold_found += 1
-                player.stamina = MAX_STAMINA
-                print("Player found gold!")
-                data.map_data[pl_x][pl_y] = data.map_data[pl_x][pl_y].replace("G", "")
-                data.map_data[pl_x][pl_y] += "-" if not map.map_data[pl_x][pl_y] else ""
-                room_map[pl_x][pl_y].obj_type = data.map_data[pl_x][pl_y]
-            else:
-                pass
 
 
         elif "Shoot_arrow" in next_action:
@@ -517,8 +517,8 @@ def startGame(data: Map, init_pos: Point):
 if __name__ == "__main__":
     input_list = Input()
     input_list.items()
-    map = input_list.get_map("6x6_10G_1W_1P.txt")
+    map = input_list.get_map("8x8_1G_1W_10P.txt")
     # map.print_entities()
     init_pos = map.random_spawning_location()
     # messagebox.showinfo("UI will started!!","Click ok to start!!!")
-    startGame(map, Point(5,4))
+    startGame(map, Point(0, 3))
