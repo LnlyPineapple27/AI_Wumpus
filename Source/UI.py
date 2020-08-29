@@ -18,7 +18,7 @@ ARROW_COST = 100
 DEATH_COST = 10000
 STEP_COST = 10
 EXIT_MAP = 10
-MAX_STAMINA = 30 * STEP_COST
+MAX_STAMINA = 70 * STEP_COST
 # --------------------------------------------Initial things-----------------------------
 window = turtle.Screen()
 root = turtle.Screen()._root
@@ -99,10 +99,11 @@ class Room(turtle.Turtle):
         self.goto(2000, 2000)
         self.hideturtle()
 
-    def Refresh(self, obj_type='-', explored=False):
+    def Refresh(self, obj_type='-', explored=False, hidden = False):
         self.obj_type = obj_type
         self.explored = explored
-        self.Discover()
+        if not hidden:
+            self.Discover()
 
     def Discover(self):
         if self.explored:
@@ -322,7 +323,7 @@ def startGame(data: Map, init_pos: Point):
         # Check valid move
         room = point_to_room(player.position, data.map_size)
         room_sym = room.to_string()
-        if '-' in room_item:
+        if room_item in ['-', 'G']:
             cl = utils.expr("NULL({})".format(room_sym))
             if cl not in KB.clauses:
                 KB.tell(cl)
@@ -399,61 +400,110 @@ def startGame(data: Map, init_pos: Point):
 
         elif "Shoot_arrow" in next_action:
             next_action.remove("Shoot_arrow")
-            dir = next_action
-            shoot_dir = random.choice(dir)
-            if data.player_shoot(player.position, shoot_dir):
-                print("Player killed a wumpus in", shoot_dir, "room")
-                w_pos = player.position
-                if shoot_dir == "Up":
-                    w_pos = w_pos.up()
-                elif shoot_dir == "Down":
-                    w_pos = w_pos.down()
-                elif shoot_dir == "Left":
-                    w_pos = w_pos.left()
-                elif shoot_dir == "Right":
-                    w_pos = w_pos.right()
+            while next_action:
+                shoot_dir = random.choice(next_action)
+                next_action.remove(shoot_dir)
 
-                w_pos_up = w_pos.up()
-                w_pos_down = w_pos.down()
-                w_pos_left = w_pos.left()
-                w_pos_right = w_pos.right()
-                # Up remove Stench ADJ rooms in UI after Wumpus is killed
-                if data.is_in_map(w_pos_up):
-                    room_map[w_pos_up.x][w_pos_up.y].Refresh(data.map_data[w_pos_up.x][w_pos_up.y], False)
-                if data.is_in_map(w_pos_down):
-                    room_map[w_pos_down.x][w_pos_down.y].Refresh(data.map_data[w_pos_down.x][w_pos_down.y], False)
-                if data.is_in_map(w_pos_left):
-                    room_map[w_pos_left.x][w_pos_left.y].Refresh(data.map_data[w_pos_left.x][w_pos_left.y], False)
-                if data.is_in_map(w_pos_right):
-                    room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False)
-            else:
-                print("Player wasted an arrow")
+                if not data.player_shoot(player.position, shoot_dir):
+                    print("Player wasted an arrow")
+                else:
+                    print("Player killed a wumpus in", shoot_dir, "room")
+                    w_pos = player.position
+                    if shoot_dir == "Up":
+                        w_pos = w_pos.up()
+                    elif shoot_dir == "Down":
+                        w_pos = w_pos.down()
+                    elif shoot_dir == "Left":
+                        w_pos = w_pos.left()
+                    elif shoot_dir == "Right":
+                        w_pos = w_pos.right()
+
+                    w_pos_up = w_pos.up()
+                    w_pos_down = w_pos.down()
+                    w_pos_left = w_pos.left()
+                    w_pos_right = w_pos.right()
+                    # Up remove Stench ADJ rooms in UI after Wumpus is killed
+                    if data.is_in_map(w_pos_up):
+                        if "S" not in data.map_data[w_pos_up.x][w_pos_up.y]:
+                            room_up = point_to_room(w_pos_up, data.map_size)
+                            room_sym_up = room_up.to_string()
+                            cl = utils.expr("EXP({})".format(room_sym_up))
+                            if cl in KB.clauses:
+                                room_map[w_pos_up.x][w_pos_up.y].Refresh(data.map_data[w_pos_up.x][w_pos_up.y], False, False)
+                                cl_up = utils.expr("S({})".format(room_sym_up))
+                                print("+++++++++++++++++++++++",cl_up)
+                                KB.retract(cl_up)
+                            else:
+                                room_map[w_pos_up.x][w_pos_up.y].Refresh(data.map_data[w_pos_up.x][w_pos_up.y], False, True)
+
+                    if data.is_in_map(w_pos_down):
+                        if "S" not in data.map_data[w_pos_down.x][w_pos_down.y]:
+                            room_down = point_to_room(w_pos_down, data.map_size)
+                            room_sym_down = room_down.to_string()
+                            cl = utils.expr("EXP({})".format(room_sym_down))
+                            if cl in KB.clauses:
+                                room_map[w_pos_down.x][w_pos_down.y].Refresh(data.map_data[w_pos_down.x][w_pos_down.y],False, False)
+                                cl_down = utils.expr("S({})".format(room_sym_down))
+                                print("+++++++++++++++++++++++",cl_down)
+                                KB.retract(cl_down)
+                            else:
+                                room_map[w_pos_down.x][w_pos_down.y].Refresh(data.map_data[w_pos_down.x][w_pos_down.y],False, True)
+
+                    if data.is_in_map(w_pos_left):
+                        if "S" not in data.map_data[w_pos_left.x][w_pos_left.y]:
+                            room_left = point_to_room(w_pos_left, data.map_size)
+                            room_sym_left = room_left.to_string()
+                            cl = utils.expr("EXP({})".format(room_sym_left))
+                            if cl in KB.clauses:
+                                room_map[w_pos_left.x][w_pos_left.y].Refresh(data.map_data[w_pos_left.x][w_pos_left.y], False, False)
+                                cl_left = utils.expr("S({})".format(room_sym_left))
+                                print("+++++++++++++++++++++++",cl_left)
+                                KB.retract(cl_left)
+                            else:
+                                room_map[w_pos_left.x][w_pos_left.y].Refresh(data.map_data[w_pos_left.x][w_pos_left.y], False, True)
+
+                    if data.is_in_map(w_pos_right):
+                        if "S" not in data.map_data[w_pos_right.x][w_pos_right.y]:
+                            room_right = point_to_room(w_pos_right, data.map_size)
+                            room_sym_right = room_right.to_string()
+                            cl = utils.expr("EXP({})".format(room_sym_right))
+                            if cl in KB.clauses:
+                                room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False, False)
+                                cl_right = utils.expr("S({})".format(room_sym_right))
+                                print("+++++++++++++++++++++++",cl_right)
+                                KB.retract(cl_right)
+                            else:
+                                room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False, False)
+
+                    break
+
         elif "Go_Home" in next_action:
-            died = True
+            quit = True
         window.update()
 
     #Escape to initial pos to exit game
     #print(path_map)
     #time.sleep(20)
-    path_list = BFS(path_map, player.position, init_pos)
-    guide_list = dir_from_path(path_list)
-    room_map[init_pos.x][init_pos.y].Refresh("ESC", False)
-    window.update()
-    if not guide_list:
-        print("Luckily, the player is already at exit pos", player.position.coordinate(), init_pos.coordinate())
-    else:
-        while guide_list:
-            step += 1
-            time.sleep(DELAY_TIME)
-            room_map[player.position.x][player.position.y].showturtle()
-            player.move(guide_list.pop(0))
-            room_map[player.position.x][player.position.y].hideturtle()
-            room_map[player.position.x][player.position.y].Discover()
-            mes.tracePathMessage(str(point_to_room(player.position, data.map_size).coordinate()),str(point_to_room(init_pos, data.map_size).coordinate()), step)
+    if not died:
+        path_list = BFS(path_map, player.position, init_pos)
+        guide_list = dir_from_path(path_list)
+        room_map[init_pos.x][init_pos.y].Refresh("ESC", False)
+        window.update()
+        if not guide_list:
+            print("Luckily, the player is already at exit pos", player.position.coordinate(), init_pos.coordinate())
+        else:
+            while guide_list:
+                step += 1
+                time.sleep(DELAY_TIME)
+                room_map[player.position.x][player.position.y].showturtle()
+                player.move(guide_list.pop(0))
+                room_map[player.position.x][player.position.y].hideturtle()
+                room_map[player.position.x][player.position.y].Discover()
+                mes.tracePathMessage(str(point_to_room(player.position, data.map_size).coordinate()),str(point_to_room(init_pos, data.map_size).coordinate()), step)
 
-            window.update()
+                window.update()
 
-        time.sleep(3)
+            time.sleep(3)
 
 
     print("END game:")
@@ -468,4 +518,4 @@ if __name__ == "__main__":
     # map.print_entities()
     init_pos = map.random_spawning_location()
     # messagebox.showinfo("UI will started!!","Click ok to start!!!")
-    startGame(map, init_pos)
+    startGame(map, Point(5,4))

@@ -211,3 +211,4 @@ def think(world, KB, cur: Point):
 
     print(act)
     return act
+
