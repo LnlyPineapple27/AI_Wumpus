@@ -344,10 +344,12 @@ def startGame(data: Map, init_pos: Point):
         if cl not in KB.clauses:
             KB.tell(cl)
         print("at",room_sym, "found",room_item)
-        print(KB.clauses)
+        #print(KB.clauses)
+        print("Thinking ...")
         next_action = think(map, KB, player.position, path_map)
+        print("OK")
         # , "Shoot_arrow"
-        print("From KB: ", next_action)
+        #print("From KB: ", next_action)
         if "Move" in next_action:
             shoot_af = "Shoot_arrow" in next_action
             if shoot_af:
@@ -361,7 +363,23 @@ def startGame(data: Map, init_pos: Point):
                     player.score -= STEP_COST
                     player.stamina -= STEP_COST
                     player.move(player_dir)
-
+                    room_item = map.map_data[player.position.x][player.position.y]
+                    room_sym = point_to_room(player.position, map.map_size).to_string()
+                    if room_item in ['-', 'G']:
+                        cl = utils.expr("NULL({})".format(room_sym))
+                        if cl not in KB.clauses:
+                            KB.tell(cl)
+                    if 'B' in room_item:
+                        cl = utils.expr("B({})".format(room_sym))
+                        if cl not in KB.clauses:
+                            KB.tell(cl)
+                    if 'S' in room_item:
+                        cl = utils.expr("S({})".format(room_sym))
+                        if cl not in KB.clauses:
+                            KB.tell(cl)
+                    cl = utils.expr("EXP({})".format(room_sym))
+                    if cl not in KB.clauses:
+                        KB.tell(cl)
                 pl_x = player.position.x
                 pl_y = player.position.y
                 room_map[pl_x][pl_y].hideturtle()
@@ -403,19 +421,41 @@ def startGame(data: Map, init_pos: Point):
                     room_map[pl_x][pl_y].obj_type = data.map_data[pl_x][pl_y]
                 else:
                     pass
+                update_KB(KB, map.map_size, player.position)
                 time.sleep(DELAY_TIME)
                 window.update()
             if shoot_af:
                 next_action.append("Shoot_arrow")
-        print(next_action)
+
         if "Shoot_arrow" in next_action:
             print(next_action)
             next_action.remove("Shoot_arrow")
-            next_action = ["Up", "Down", "Left", "Right"]
-            while next_action:
-                shoot_dir = random.choice(next_action)
-                next_action.remove(shoot_dir)
+            may_w = [i for i in player.position.adj() if in_map(map.map_size, i) and not path_map[i.x][i.y]]
+            d = {}
+            for p in may_w:
+                d[p.coordinate()] = 0
+                up, down, left, right = p.adj()
+                d[p.coordinate()] += 1 if "S({})".format(point_to_room(up, map.map_size).to_string()) else 0
+                d[p.coordinate()] += 1 if "S({})".format(point_to_room(down, map.map_size).to_string()) else 0
+                d[p.coordinate()] += 1 if "S({})".format(point_to_room(left, map.map_size).to_string()) else 0
+                d[p.coordinate()] += 1 if "S({})".format(point_to_room(right, map.map_size).to_string()) else 0
 
+            may_w.sort(key=lambda x: d[x.coordinate()])
+            res = []
+            for cur in may_w:
+                horizontal = pl_x - cur.x
+                vertical = pl_y - cur.y
+                if horizontal == 1:
+                    res.append("Up")
+                elif horizontal == -1:
+                    res.append("Down")
+                elif vertical == 1:
+                    res.append("Left")
+                elif vertical == -1:
+                    res.append("Right")
+            next_action = res
+            while next_action:
+                shoot_dir = next_action.pop()
                 if not data.player_shoot(player.position, shoot_dir):
                     print("Player wasted an arrow")
                 else:
@@ -490,7 +530,6 @@ def startGame(data: Map, init_pos: Point):
                                 KB.retract(cl)
                             else:
                                 room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False, False)
-
                     break
 
         elif "Go_Home" in next_action:
@@ -530,8 +569,8 @@ def startGame(data: Map, init_pos: Point):
 if __name__ == "__main__":
     input_list = Input()
     input_list.items()
-    map = input_list.get_map("8x8_1G_1W_10P.txt")
+    map = input_list.get_map("6x6_10G_3W_3P.txt")
     # map.print_entities()
     init_pos = map.random_spawning_location()
     # messagebox.showinfo("UI will started!!","Click ok to start!!!")
-    startGame(map, Point(0, 3))
+    startGame(map, init_pos)

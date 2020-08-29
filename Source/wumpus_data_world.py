@@ -96,6 +96,7 @@ def find_safe(world, KB):
             cl2 = utils.expr("EXP({})".format(room))
             safe = KB.ask(cl1)
             expanded = cl2 in KB.clauses
+
             if safe and not expanded:
                 safe_list.append(p)
 
@@ -131,7 +132,7 @@ def KB_tell_WUM_PIT_ADJ_SAFE(KB, size, pnt, cur_room):
         if adj not in KB.clauses:
             KB.tell(adj)
         wum, pit, safe = KB_asking(KB, room)
-        print(room, "Safe", not not safe)
+        #print(room, "Safe", not not safe)
         if wum:
             cl = utils.expr("WUM({})".format(room))
             if cl not in KB.clauses:
@@ -158,25 +159,26 @@ def update_KB(KB, size, pnt):
 def think(world, KB, cur: Point, map):
 
     update_KB(KB, world.map_size, cur)
-    print("KB",KB.clauses)
+    #print("KB",KB.clauses)
     sal, sl = find_safe(world, KB)
 
     if not sal and not sl:
         act = ["Go_Home"]
     elif sal:
-        print("found safe")
-        print(sal)
+        #print("found safe")
+        #print(sal)
         for p in sal:
             map[p.x][p.y] = True
         act = ["Move"]
-        goal = sal.pop()
+        sal.sort(key=lambda x: cur.manhattan_distance(x))
+        goal = sal.pop(0)
         dir = dir_from_path(BFS(map, cur, goal))
         act += dir
     else:
-        print("found B")
+        #print("found B")
         for p in sl:
             map[p.x][p.y] = True
-        sl.sort(reverse=True, key=lambda x: sum([1 if in_map(world.map_size,i) else 0 for i in x.diag()]))
+        sl.sort(key=lambda x: sum([1 if in_map(world.map_size,i) and i in sl else 0 for i in x.diag()]))
         act = ["Move"]
         goal = sl.pop()
         dir = dir_from_path(BFS(map, cur, goal))
