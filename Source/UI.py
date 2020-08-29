@@ -18,7 +18,7 @@ ARROW_COST = 100
 DEATH_COST = 10000
 STEP_COST = 10
 EXIT_MAP = 10
-MAX_STAMINA = 100*STEP_COST
+MAX_STAMINA = 30 * STEP_COST
 # --------------------------------------------Initial things-----------------------------
 window = turtle.Screen()
 root = turtle.Screen()._root
@@ -328,12 +328,12 @@ def startGame(data: Map, init_pos: Point):
                 KB.tell(cl)
         if 'B' in room_item:
             cl = utils.expr("B({})".format(room_sym))
-            if not cl in KB.clauses:
+            if cl not in KB.clauses:
                 KB.tell(cl)
 
         if 'S' in room_item:
             cl = utils.expr("S({})".format(room_sym))
-            if not cl in KB.clauses:
+            if cl not in KB.clauses:
                 KB.tell(cl)
         cl = utils.expr("EXP({})".format(room_sym))
         if cl not in KB.clauses:
@@ -343,7 +343,8 @@ def startGame(data: Map, init_pos: Point):
         next_action = think(map, KB, player.position)
         # , "Shoot_arrow"
         print("From KB: ", next_action)
-        if "NOT SAFE" not in next_action:
+        if "Move" in next_action:
+            next_action.remove("Move")
             room_map[player.position.x][player.position.y].showturtle()
             while next_action:
                 player_dir = random.choice(next_action)

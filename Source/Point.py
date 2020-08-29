@@ -47,5 +47,8 @@ class Point:
         cp_pnt.y += 1
         return cp_pnt
 
+    def adj(self):
+        return self.up(), self.down(), self.left(), self.right()
+
     def clone(self):
         return cp.deepcopy(self)

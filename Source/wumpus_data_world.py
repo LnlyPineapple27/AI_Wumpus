@@ -60,6 +60,10 @@ def init_KB():
     # ADJ kề
     sen = ["(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & ADJ(x, v) & B(y) & B(z) & B(t) & B(v)) ==> PIT(x)",
            "(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & ADJ(x, t) & S(y) & S(z) & S(t) & S(v)) ==> WUM(x)",
+           "(EDGE(x) & ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & S(y) & S(z) & S(t)) ==> WUM(x)",
+           "(EDGE(x) & ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & B(y) & B(z) & B(t)) ==> PIT(x)",
+           "(CORNER(x) & ADJ(x, y) & ADJ(x, z) & S(y) & S(z)) ==> WUM(x)",
+           "(CORNER(x) & ADJ(x, y) & ADJ(x, z) & B(y) & B(z)) ==> PIT(x)",
            "(ADJ(x, y) & NULL(x)) ==> SAFE(y)",
            "B(x) ==> SAFE(x)",
            "S(x) ==> SAFE(x)",
@@ -75,7 +79,6 @@ def in_map(size, pos):
 
 
 def KB_asking(KB, room):
-    print(room)
     wum = KB.ask(utils.expr("WUM{}".format(room)))
     pit = KB.ask(utils.expr("PIT{}".format(room)))
     safe = KB.ask(utils.expr("SAFE({})".format(room)))
@@ -84,19 +87,33 @@ def KB_asking(KB, room):
     return wum, pit, safe, expanded
 
 
+def KB_tell_corner_edge(KB, size, pnt):
+    adj = pnt.adj()
+    pnt = point_to_room(pnt, size).to_string()
+    count_in = sum([1 if in_map(size, d) else 0 for d in adj])
+    if count_in == 2:
+        fact = utils.expr("CORNER({})".format(pnt))
+        if fact not in KB.clauses:
+            KB.tell(fact)
+    elif count_in == 3:
+        fact = utils.expr("EDGE({})".format(pnt))
+        if fact not in KB.clauses:
+            KB.tell(fact)
+
+
 def think(world, KB, cur: Point):
-    up = point_to_room(cur.up(), world.map_size).to_string() if in_map(world.map_size, cur.up()) else None
-    down = point_to_room(cur.down(), world.map_size).to_string() if in_map(world.map_size, cur.down()) else None
-    left = point_to_room(cur.left(), world.map_size).to_string() if in_map(world.map_size, cur.left()) else None
-    right = point_to_room(cur.right(), world.map_size).to_string() if in_map(world.map_size, cur.right()) else None
+    up, down, left, right = cur.adj()
     cur_room = point_to_room(cur, world.map_size).to_string()
     act = []
     safe_dict = {"Up": "NO", "Down": "NO", "Left": "NO", "Right": "NO"}
-    if up:
+    if in_map(world.map_size, up):
+        # Check corner or edge
+        KB_tell_corner_edge(KB, world.map_size, up)
+        # Add Adjacent fact
+        up = point_to_room(up, world.map_size).to_string()
         adj = utils.expr("ADJ({}, {})".format(cur_room, up))
         if adj not in KB.clauses:
             KB.tell(adj)
-
         wum, pit, safe, expanded = KB_asking(KB, up)
         if wum:
             safe_dict["Up"] = "WUM"
@@ -110,7 +127,11 @@ def think(world, KB, cur: Point):
                 act.append("Up")
         print("up, expanded:", not not expanded)
 
-    if down:
+    if in_map(world.map_size, down):
+
+        KB_tell_corner_edge(KB, world.map_size, down)
+
+        down = point_to_room(down, world.map_size).to_string()
         adj = utils.expr("ADJ({}, {})".format(cur_room, down))
         if adj not in KB.clauses:
             KB.tell(adj)
@@ -128,7 +149,10 @@ def think(world, KB, cur: Point):
         print("down, safe:", not not safe)
         print("down, expanded:", not not expanded)
 
-    if left:
+    if in_map(world.map_size, left):
+        KB_tell_corner_edge(KB, world.map_size, left)
+
+        left = point_to_room(left, world.map_size).to_string()
         adj = utils.expr("ADJ({}, {})".format(cur_room, left))
         if adj not in KB.clauses:
             KB.tell(adj)
@@ -146,7 +170,10 @@ def think(world, KB, cur: Point):
                 act.append("Left")
         print("left, expanded:", not not expanded)
 
-    if right:
+    if in_map(world.map_size, right):
+        KB_tell_corner_edge(KB, world.map_size, right)
+
+        right = point_to_room(right, world.map_size).to_string()
         adj = utils.expr("ADJ({}, {})".format(cur_room, right))
         if adj not in KB.clauses:
             KB.tell(adj)
@@ -165,17 +192,22 @@ def think(world, KB, cur: Point):
 
     print("dir1", act)
     print(safe_dict)
+    if act:
+        act.append("Move")
     if not act:
         print("dir2", act)
         act = [item[0] for item in safe_dict.items() if item[1] == "SAFE"]
+        if act:
+            act.append("Move")
     if not act:
         if "B" in world.map_data[cur.x][cur.y]:
             act = ["Go_Home"]
         else:
             act = ["Shoot_arrow"]
             dir = [item[0] for item in safe_dict.items() if item[1] == "WUM"]
+            if not dir:
+                dir = ["Up", "Down", "Left", "Right"]
             act += dir
-            return act
 
+    print(act)
     return act
-
