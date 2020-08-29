@@ -445,6 +445,7 @@ def startGame(data: Map, init_pos: Point):
                                 cl_up = utils.expr("S({})".format(room_sym_up))
                                 #print("+++++++++++++++++++++++",cl_up)
                                 KB.retract(cl_up)
+                                KB.retract(cl)
                             else:
                                 room_map[w_pos_up.x][w_pos_up.y].Refresh(data.map_data[w_pos_up.x][w_pos_up.y], False, True)
 
@@ -458,6 +459,7 @@ def startGame(data: Map, init_pos: Point):
                                 cl_down = utils.expr("S({})".format(room_sym_down))
                                 #print("+++++++++++++++++++++++",cl_down)
                                 KB.retract(cl_down)
+                                KB.retract(cl)
                             else:
                                 room_map[w_pos_down.x][w_pos_down.y].Refresh(data.map_data[w_pos_down.x][w_pos_down.y],False, True)
 
@@ -471,6 +473,7 @@ def startGame(data: Map, init_pos: Point):
                                 cl_left = utils.expr("S({})".format(room_sym_left))
                                 #print("+++++++++++++++++++++++",cl_left)
                                 KB.retract(cl_left)
+                                KB.retract(cl)
                             else:
                                 room_map[w_pos_left.x][w_pos_left.y].Refresh(data.map_data[w_pos_left.x][w_pos_left.y], False, True)
 
@@ -484,6 +487,7 @@ def startGame(data: Map, init_pos: Point):
                                 cl_right = utils.expr("S({})".format(room_sym_right))
                                 #print("+++++++++++++++++++++++",cl_right)
                                 KB.retract(cl_right)
+                                KB.retract(cl)
                             else:
                                 room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False, False)
 
