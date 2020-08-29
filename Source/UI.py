@@ -323,6 +323,10 @@ def startGame(data: Map, init_pos: Point):
         # Check valid move
         room = point_to_room(player.position, data.map_size)
         room_sym = room.to_string()
+
+        room_item = data.map_data[player.position.x][player.position.y]
+
+        #print("FFFFFFFFFFF", room_item)
         if room_item in ['-', 'G']:
             cl = utils.expr("NULL({})".format(room_sym))
             if cl not in KB.clauses:
@@ -367,7 +371,6 @@ def startGame(data: Map, init_pos: Point):
                       data.OBJECT_DICT[room_item]
             mes.writeMessage(message, player.score, step, player.gold_found)
             # check player is dead or not
-
             if "P" in room_item:
                 print("Player fell into a pit!!")
                 player.destroy()
@@ -431,7 +434,7 @@ def startGame(data: Map, init_pos: Point):
                             if cl in KB.clauses:
                                 room_map[w_pos_up.x][w_pos_up.y].Refresh(data.map_data[w_pos_up.x][w_pos_up.y], False, False)
                                 cl_up = utils.expr("S({})".format(room_sym_up))
-                                print("+++++++++++++++++++++++",cl_up)
+                                #print("+++++++++++++++++++++++",cl_up)
                                 KB.retract(cl_up)
                             else:
                                 room_map[w_pos_up.x][w_pos_up.y].Refresh(data.map_data[w_pos_up.x][w_pos_up.y], False, True)
@@ -444,7 +447,7 @@ def startGame(data: Map, init_pos: Point):
                             if cl in KB.clauses:
                                 room_map[w_pos_down.x][w_pos_down.y].Refresh(data.map_data[w_pos_down.x][w_pos_down.y],False, False)
                                 cl_down = utils.expr("S({})".format(room_sym_down))
-                                print("+++++++++++++++++++++++",cl_down)
+                                #print("+++++++++++++++++++++++",cl_down)
                                 KB.retract(cl_down)
                             else:
                                 room_map[w_pos_down.x][w_pos_down.y].Refresh(data.map_data[w_pos_down.x][w_pos_down.y],False, True)
@@ -457,7 +460,7 @@ def startGame(data: Map, init_pos: Point):
                             if cl in KB.clauses:
                                 room_map[w_pos_left.x][w_pos_left.y].Refresh(data.map_data[w_pos_left.x][w_pos_left.y], False, False)
                                 cl_left = utils.expr("S({})".format(room_sym_left))
-                                print("+++++++++++++++++++++++",cl_left)
+                                #print("+++++++++++++++++++++++",cl_left)
                                 KB.retract(cl_left)
                             else:
                                 room_map[w_pos_left.x][w_pos_left.y].Refresh(data.map_data[w_pos_left.x][w_pos_left.y], False, True)
@@ -470,7 +473,7 @@ def startGame(data: Map, init_pos: Point):
                             if cl in KB.clauses:
                                 room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False, False)
                                 cl_right = utils.expr("S({})".format(room_sym_right))
-                                print("+++++++++++++++++++++++",cl_right)
+                                #print("+++++++++++++++++++++++",cl_right)
                                 KB.retract(cl_right)
                             else:
                                 room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False, False)
