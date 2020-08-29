@@ -87,7 +87,7 @@ def KB_asking(KB, room):
 
 def find_safe(world, KB):
     safe_list = []
-    b_list = []
+    s_list = []
     for i in range(world.map_size):
         for j in range(world.map_size):
             p = Point(i, j)
@@ -99,12 +99,12 @@ def find_safe(world, KB):
             if safe and not expanded:
                 safe_list.append(p)
 
-            cl3 = utils.expr("B({})".format(room))
-            b = cl3 in KB.clauses
-            if b:
-                b_list.append(p)
+            cl3 = utils.expr("S({})".format(room))
+            s = cl3 in KB.clauses
+            if s:
+                s_list.append(p)
 
-    return safe_list, b_list
+    return safe_list, s_list
 
 
 def KB_tell_corner_edge(KB, size, pnt):
@@ -131,7 +131,7 @@ def KB_tell_WUM_PIT_ADJ_SAFE(KB, size, pnt, cur_room):
         if adj not in KB.clauses:
             KB.tell(adj)
         wum, pit, safe = KB_asking(KB, room)
-        print("Safe", not not safe)
+        print(room, "Safe", not not safe)
         if wum:
             cl = utils.expr("WUM({})".format(room))
             if cl not in KB.clauses:
@@ -159,27 +159,29 @@ def think(world, KB, cur: Point, map):
 
     update_KB(KB, world.map_size, cur)
     print("KB",KB.clauses)
-    sl, bl = find_safe(world, KB)
+    sal, sl = find_safe(world, KB)
 
-    if not sl and not bl:
+    if not sal and not sl:
         act = ["Go_Home"]
-    elif sl:
+    elif sal:
         print("found safe")
-        print(sl)
-        for p in sl:
+        print(sal)
+        for p in sal:
             map[p.x][p.y] = True
         act = ["Move"]
-        goal = sl.pop()
+        goal = sal.pop()
         dir = dir_from_path(BFS(map, cur, goal))
         act += dir
     else:
         print("found B")
-        for p in bl:
+        for p in sl:
             map[p.x][p.y] = True
-        act = ["Go_Home"]
-        goal = bl.pop()
+        sl.sort(reverse=True, key=lambda x: sum([1 if in_map(world.map_size,i) else 0 for i in x.diag()]))
+        act = ["Move"]
+        goal = sl.pop()
         dir = dir_from_path(BFS(map, cur, goal))
         act += dir
+        act.append("Shoot_arrow")
 
     return act
 

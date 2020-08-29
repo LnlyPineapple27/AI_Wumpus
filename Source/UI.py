@@ -18,7 +18,7 @@ ARROW_COST = 100
 DEATH_COST = 10000
 STEP_COST = 10
 EXIT_MAP = 10
-MAX_STAMINA = 70 * STEP_COST
+MAX_STAMINA = 10000000 * STEP_COST
 # --------------------------------------------Initial things-----------------------------
 window = turtle.Screen()
 root = turtle.Screen()._root
@@ -349,6 +349,9 @@ def startGame(data: Map, init_pos: Point):
         # , "Shoot_arrow"
         print("From KB: ", next_action)
         if "Move" in next_action:
+            shoot_af = "Shoot_arrow" in next_action
+            if shoot_af:
+                next_action.remove("Shoot_arrow")
             next_action.remove("Move")
             while next_action:
                 player_dir = next_action.pop(0)
@@ -402,10 +405,13 @@ def startGame(data: Map, init_pos: Point):
                     pass
                 time.sleep(DELAY_TIME)
                 window.update()
-
-
-        elif "Shoot_arrow" in next_action:
+            if shoot_af:
+                next_action.append("Shoot_arrow")
+        print(next_action)
+        if "Shoot_arrow" in next_action:
+            print(next_action)
             next_action.remove("Shoot_arrow")
+            next_action = ["Up", "Down", "Left", "Right"]
             while next_action:
                 shoot_dir = random.choice(next_action)
                 next_action.remove(shoot_dir)

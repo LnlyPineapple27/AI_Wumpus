@@ -50,5 +50,20 @@ class Point:
     def adj(self):
         return self.up(), self.down(), self.left(), self.right()
 
+    def top_left(self):
+        return self.up().left()
+
+    def top_right(self):
+        return self.up().right()
+
+    def bot_left(self):
+        return self.down().left()
+
+    def bot_right(self):
+        return self.down().right()
+
+    def diag(self):
+        return self.top_left(), self.top_right(), self.bot_left(), self.bot_right()
+
     def clone(self):
         return cp.deepcopy(self)
