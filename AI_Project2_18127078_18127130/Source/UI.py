@@ -10,7 +10,7 @@ val_y = 270
 PIXEL_SIZE = 70
 width = 1000
 height = 820
-DELAY_TIME = 0.2
+DELAY_TIME = 0.1
 style = ('Courier', 20, 'italic')
 # --------------------------------------COST FOR SCORING---------------------------
 GOLD = 100
@@ -291,6 +291,8 @@ def startGame(data: Map, init_pos: Point):
 
     if "P" in room_item:
         print("Player fell into a pit!!")
+        player.score -= DEATH_COST
+        print("[FINAL SCORE]:", player.score)
         player.destroy()
         room_map[pl_x][pl_y].reveal_pit()
         room_map[pl_x][pl_y].showturtle()
@@ -300,6 +302,8 @@ def startGame(data: Map, init_pos: Point):
 
     elif "W" in room_item:
         print("Player got eaten by the wumpus!!")
+        player.score -= DEATH_COST
+        print("[FINAL SCORE]:", player.score)
         player.destroy()
         room_map[pl_x][pl_y].reveal_wumpus()
         room_map[pl_x][pl_y].showturtle()
@@ -393,6 +397,8 @@ def startGame(data: Map, init_pos: Point):
                 # check player is dead or not
                 if "P" in room_item:
                     print("Player fell into a pit!!")
+                    player.score -= DEATH_COST
+                    print("[FINAL SCORE]:", player.score)
                     player.destroy()
                     room_map[pl_x][pl_y].reveal_pit()
                     room_map[pl_x][pl_y].showturtle()
@@ -403,6 +409,8 @@ def startGame(data: Map, init_pos: Point):
 
                 elif "W" in room_item:
                     print("Player got eaten by the wumpus!!")
+                    player.score -= DEATH_COST
+                    print("[FINAL SCORE]:", player.score)
                     player.destroy()
                     room_map[pl_x][pl_y].reveal_wumpus()
                     room_map[pl_x][pl_y].showturtle()
@@ -456,6 +464,7 @@ def startGame(data: Map, init_pos: Point):
             next_action = res
             while next_action:
                 shoot_dir = next_action.pop()
+                player.score -= ARROW_COST
                 if not data.player_shoot(player.position, shoot_dir):
                     print("Player wasted an arrow")
                 else:
@@ -529,7 +538,7 @@ def startGame(data: Map, init_pos: Point):
                                 KB.retract(cl_right)
                                 KB.retract(cl)
                             else:
-                                room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False, False)
+                                room_map[w_pos_right.x][w_pos_right.y].Refresh(data.map_data[w_pos_right.x][w_pos_right.y], False, True)
                     break
 
         elif "Go_Home" in next_action:
@@ -545,6 +554,8 @@ def startGame(data: Map, init_pos: Point):
         room_map[init_pos.x][init_pos.y].Refresh("ESC", False)
         window.update()
         if not guide_list:
+            mes.tracePathMessage(str(point_to_room(player.position, data.map_size).coordinate()),
+                                 str(point_to_room(init_pos, data.map_size).coordinate()), step)
             print("Luckily, the player is already at exit pos", player.position.coordinate(), init_pos.coordinate())
         else:
             while guide_list:
@@ -558,10 +569,11 @@ def startGame(data: Map, init_pos: Point):
 
                 window.update()
 
-            time.sleep(3)
+        time.sleep(3)
 
 
     print("END game:")
+    print("[FINAL SCORE]:", player.score)
     # turtle.exitonclick()
     endGame()
 
