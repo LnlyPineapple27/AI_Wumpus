@@ -58,7 +58,7 @@ def init_KB():
     # Init
     # ADJ kề
     sen = ["(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & ADJ(x, v) & B(y) & B(z) & B(t) & B(v)) ==> PIT(x)",
-           "(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & ADJ(x, t) & S(y) & S(z) & S(t) & S(v)) ==> WUM(x)",
+           "(ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & ADJ(x, v) & S(y) & S(z) & S(t) & S(v)) ==> WUM(x)",
            "(EDGE(x) & ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & S(y) & S(z) & S(t)) ==> WUM(x)",
            "(EDGE(x) & ADJ(x, y) & ADJ(x, z) & ADJ(x, t) & B(y) & B(z) & B(t)) ==> PIT(x)",
            "(CORNER(x) & ADJ(x, y) & ADJ(x, z) & S(y) & S(z)) ==> WUM(x)",
