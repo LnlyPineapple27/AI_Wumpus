@@ -5,4 +5,4 @@ Members:
 + Phan Tan Dat - 18127078
 + Tran Phuoc Loc - 18127130
 
-![Watch the video](https://github.com/LnlyPineapple27/AI_Wumpus/blob/master/AI_Project2_18127078_18127130/Demo/demo.mp4)
+[Watch the demo video](https://www.youtube.com/watch?v=XJaPJvNPWyA)
